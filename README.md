@@ -1,4 +1,4 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 12/10/2026 23:25:37 -->
+<!-- Dernière génération/modification faite par l'IA Claude le 12/10/2026 23:37:30 -->
 # AOI — Automatisation des tests d'applications C++
 
 Projet fil rouge de la formation **AOI** : un serveur de **Puissance 4** en C++20, exposé par une API REST, construit en **architecture hexagonale** et compilé sur **Windows 11 (MSVC)** et **Linux (GCC, via Docker)**.
@@ -18,12 +18,19 @@ git checkout iteration-1      # revenir à l'état d'une itération donnée
 
 | Dossier | Rôle |
 |---|---|
+| [`installation/`](installation/) | **à faire en premier** : note d'installation Windows 11 (C++20, MSVC) et script de vérification du poste |
 | [`puissance4-cpp/`](puissance4-cpp/README.md) | le projet : serveur, IHM HTML5, tests ; **mode d'emploi complet dans son README** |
 
 ## Prérequis
 
 - Windows 11 : Visual Studio 2022 ou Build Tools 2022 (C++), CMake ≥ 3.25, Git
 - Docker Desktop (compilation et tests sous Linux)
+
+Avant la formation, suivre la [note d'installation](installation/Note-installation-Windows11-Cpp20-MSVC.docx) puis vérifier le poste :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\installation\verifier-environnement.ps1
+```
 
 Démarrage rapide (PowerShell, dans `puissance4-cpp`) :
 
