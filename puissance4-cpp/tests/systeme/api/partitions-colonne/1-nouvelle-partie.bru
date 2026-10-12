@@ -1,0 +1,26 @@
+meta {
+  name: 1 Nouvelle partie
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/parties
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "joueur1": "Alice",
+    "joueur2": "Bob"
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  bru.setVar("idPartie", res.getBody().id);
+}

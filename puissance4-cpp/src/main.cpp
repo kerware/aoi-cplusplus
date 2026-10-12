@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 // ---------------------------------------------------------------------------
 // Point d'entrée = "composition root" de l'architecture hexagonale :
 // c'est le SEUL endroit qui connaît à la fois le domaine et les adaptateurs.
@@ -70,7 +70,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::cout << "Puissance 4 - serveur REST demarre sur http://localhost:" << port << "\n"
-              << "Tapez q puis Entree pour arreter." << std::endl;
+              << "Tapez q puis Entree pour arreter.\n"
+              << std::flush;  // : flush explicite, une seule fois
 
     // Arrêt propre sur "q" ; si l'entrée standard est fermée (Docker détaché),
     // le thread se termine et le serveur continue de tourner.
@@ -86,6 +87,6 @@ int main(int argc, char* argv[]) {
     console.detach();
 
     serveur.ecouter();
-    std::cout << "Serveur arrete." << std::endl;
+    std::cout << "Serveur arrete.\n";
     return 0;
 }

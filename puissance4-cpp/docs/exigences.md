@@ -1,5 +1,5 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:53:58 -->
-# Cahier d'exigences — Puissance 4 (itérations 1 et 2)
+<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 18:16:29 -->
+# Cahier d'exigences — Puissance 4 (itérations 1 à 4)
 
 Source : `generation/referentiel_it2.py` (même contenu que l'import Squash TM).
 
@@ -18,3 +18,13 @@ Source : `generation/referentiel_it2.py` (même contenu que l'import Squash TM).
 | EX-11 | Réponse à un coup | La réponse à un coup valide (200) contient la partie à jour : grille, joueur courant, nombre de coups et dernier coup (colonne, ligne, couleur, joueur). | mineure | 2 |
 | EX-12 | Jouer depuis l'IHM | Dans l'IHM, le joueur clique sur une colonne pour jouer ; la grille, le joueur courant et le nombre de coups sont mis à jour. Une colonne pleine ne peut plus être choisie. | majeure | 2 |
 | EX-13 | Temps de réponse d'un coup | Un coup est traité en moins de 50 ms pour 95 % des requêtes, avec 50 parties jouées simultanément. | mineure | 2 |
+| EX-14 | Victoire | 4 jetons de même couleur alignés (horizontale, verticale, diagonales) font gagner le joueur. | critique | 3 |
+| EX-15 | Partie gagnée | La partie gagnée a le statut GAGNEE et indique le vainqueur (API, IHM). | majeure | 3 |
+| EX-16 | Match nul | Grille pleine sans alignement : statut NULLE, pas de vainqueur. | majeure | 3 |
+| EX-17 | Partie terminée | Aucun coup n'est accepté dans une partie terminée : 409 « Partie terminée : plus aucun coup n'est accepté ». | majeure | 3 |
+| EX-18 | État final dans l'IHM | À la fin de la partie, l'IHM affiche « Partie terminée — victoire de X » ou « Partie terminée — match nul » à la place de « au tour de … ». | mineure | 4 |
+| EX-19 | Coups simultanés | Des coups envoyés simultanément sur une même partie sont traités l'un après l'autre : chaque coup accepté (200) est enregistré. | majeure | 4 |
+| EX-20 | Client bureau | Un client Qt (Windows, Linux) permet de créer une partie et de jouer, avec les mêmes règles et messages que l'IHM web. | majeure | 4 |
+
+**Itération 4** : EX-13 (performance) passe au statut *approuvée* et devient testable : environnement de référence =
+serveur **Release** dans Docker, injecteur dans le même réseau Docker, 50 utilisateurs virtuels.

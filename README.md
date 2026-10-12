@@ -10,6 +10,7 @@ Le projet grandit d'une itération par chapitre de la formation. Chaque itérati
 | `iteration-1` | 1. Démarche de tests | créer une partie : squelette multi-plate-forme (CMake, Docker), architecture hexagonale, premiers tests GoogleTest |
 | `iteration-2` | 2. Analyse et conception | jouer un coup ; exigences EX-01 à EX-13 ; Squash TM |
 | `iteration-3` | 3. Tests unitaires | fin de partie (victoire) en TDD ; GoogleMock ; couverture gcov / gcovr ; cppcheck, clang-tidy |
+| `iteration-4` | 4. Tests système | client Qt ; tests d'API (GoogleTest, Bruno), d'IHM (Playwright, Selenium, QtTest), de charge (k6, Gatling) ; Docker Compose |
 
 ```bash
 git clone https://github.com/kerware/aoi-cplusplus.git
@@ -23,11 +24,13 @@ git checkout iteration-1      # revenir à l'état d'une itération donnée
 | [`installation/`](installation/) | **à faire en premier** : note d'installation Windows 11 (C++20, MSVC) et script de vérification du poste |
 | [`puissance4-cpp/`](puissance4-cpp/README.md) | le projet : serveur, IHM HTML5, tests ; **mode d'emploi complet dans son README** |
 | `outils/squash-tm/` | Squash TM 14 + PostgreSQL (gestion des exigences et des cas de test) |
+| `outils/mantis/` | Mantis Bug Tracker + MariaDB (gestion des anomalies) |
 
 ## Prérequis
 
 - Windows 11 : Visual Studio 2022 ou Build Tools 2022 (C++), CMake ≥ 3.25, Git
 - Docker Desktop (compilation et tests sous Linux)
+- Tests système : Node.js 22, Python 3 (Selenium), Java 21 + Maven (Gatling), Qt 6 MinGW (client Qt)
 
 Avant la formation, suivre la [note d'installation](installation/Note-installation-Windows11-Cpp20-MSVC.docx) puis vérifier le poste :
 

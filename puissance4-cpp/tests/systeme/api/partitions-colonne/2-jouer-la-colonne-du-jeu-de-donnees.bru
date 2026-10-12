@@ -1,0 +1,25 @@
+meta {
+  name: 2 Jouer la colonne du jeu de donnees
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/parties/{{idPartie}}/coups
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "colonne": {{colonne}}
+  }
+}
+
+tests {
+  // Une ligne du fichier CSV = un cas de test (partitions et valeurs limites d'EX-08, chapitre 2)
+  const donnees = bru.runner.iterationData;
+  test("colonne " + donnees.get("colonne") + " (" + donnees.get("partition") + ") : statut " + donnees.get("statutAttendu"), function () {
+    expect(res.getStatus()).to.equal(Number(donnees.get("statutAttendu")));
+  });
+}

@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #include "domaine/Grille.hpp"
 #include "domaine/Erreurs.hpp"
 
@@ -158,4 +158,76 @@ TEST(GrilleVictoireTest, une_case_vide_n_est_jamais_alignee) {
     const Grille grille;
 
     EXPECT_FALSE(grille.aligneQuatre(5, 0));
+}
+
+// --- TDD : verticale et diagonales (EX-14) -----------------
+
+TEST(GrilleVictoireTest, quatre_jetons_empiles_forment_un_alignement_vertical) {
+    Grille grille;
+    for (int i = 0; i < 4; ++i) {
+        grille.jouer(2, Jeton::Jaune);
+    }
+
+    EXPECT_TRUE(grille.aligneQuatre(2, 2));  // le 4e jeton est en ligne 2
+}
+
+TEST(GrilleVictoireTest, trois_jetons_empiles_ne_suffisent_pas) {
+    Grille grille;
+    for (int i = 0; i < 3; ++i) {
+        grille.jouer(2, Jeton::Jaune);
+    }
+
+    EXPECT_FALSE(grille.aligneQuatre(3, 2));
+}
+
+// Une diagonale est construite colonne par colonne : on "cale" chaque jeton
+// avec des jetons adverses pour atteindre la bonne hauteur.
+struct Diagonale {
+    const char* nom;
+    int colonnes[4];   // colonne du jeton gagnant à chaque étage
+    int cales[4];      // nombre de jetons adverses à poser d'abord dans cette colonne
+};
+
+// Affichage lisible du paramètre (sinon GoogleTest et CTest affichent les octets bruts)
+std::ostream& operator<<(std::ostream& flux, const Diagonale& d) { return flux << d.nom; }
+
+class GrilleDiagonaleTest : public ::testing::TestWithParam<Diagonale> {};
+
+TEST_P(GrilleDiagonaleTest, quatre_jetons_en_diagonale_forment_un_alignement) {
+    const Diagonale& d = GetParam();
+    Grille grille;
+    int ligne = 0;
+    for (int i = 0; i < 4; ++i) {
+        for (int k = 0; k < d.cales[i]; ++k) {
+            grille.jouer(d.colonnes[i], Jeton::Jaune);
+        }
+        ligne = grille.jouer(d.colonnes[i], Jeton::Rouge);
+    }
+
+    EXPECT_TRUE(grille.aligneQuatre(ligne, d.colonnes[3]));
+}
+
+INSTANTIATE_TEST_SUITE_P(EX14, GrilleDiagonaleTest,
+                         ::testing::Values(Diagonale{"montante", {0, 1, 2, 3}, {0, 1, 2, 3}},
+                                           Diagonale{"descendante", {3, 4, 5, 6}, {3, 2, 1, 0}},
+                                           Diagonale{"montante_au_bord", {3, 4, 5, 6}, {0, 1, 2, 3}}),
+                         [](const ::testing::TestParamInfo<Diagonale>& info) { return std::string(info.param.nom); });
+
+TEST(GrilleTest, une_grille_remplie_est_pleine) {
+    Grille grille;
+    EXPECT_FALSE(grille.estPleine());
+    for (int colonne = 0; colonne < Grille::COLONNES; ++colonne) {
+        for (int ligne = 0; ligne < Grille::LIGNES; ++ligne) {
+            grille.jouer(colonne, (ligne + colonne / 2) % 2 ? Jeton::Jaune : Jeton::Rouge);
+        }
+    }
+
+    EXPECT_TRUE(grille.estPleine());
+}
+
+// branche non couverte relevée par gcovr (Grille.cpp, ligne 50)
+TEST(GrilleJouerTest, jouer_un_jeton_vide_est_refuse) {
+    Grille grille;
+
+    EXPECT_THROW(grille.jouer(0, Jeton::Vide), std::invalid_argument);
 }

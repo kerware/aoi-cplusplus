@@ -1,10 +1,10 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:00:45
+# Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:49:56
 # ---------------------------------------------------------------------------
 # Compilation et tests Linux du projet Puissance 4, depuis Windows + Docker Desktop
 #
 #   docker build --target outils -t p4-outils .        # image de la chaîne de compilation
-#   docker build -t puissance4:iteration3 .            # compile + teste + image d'exécution
-#   docker run --rm -p 8080:8080 puissance4:iteration3 # lance le serveur
+#   docker build -t puissance4:iteration4 .            # compile + teste + image d'exécution
+#   docker run --rm -p 8080:8080 puissance4:iteration4 # lance le serveur
 #   docker build --target rapports --output type=local,dest=rapports .
 #                                                      # couverture gcov + cppcheck + clang-tidy -> ./rapports
 # ---------------------------------------------------------------------------
@@ -21,6 +21,11 @@ WORKDIR /src
 FROM outils AS build
 COPY . .
 RUN cmake --workflow --preset linux-gcc
+
+# --- Étape 2 bis : compilation Release du serveur, APRÈS les tests ---------------
+# Les mesures de performance (k6, Gatling) se font sur un binaire optimisé, jamais en Debug.
+FROM build AS release
+RUN cmake --preset linux-gcc-release && cmake --build --preset linux-gcc-release --target puissance4_serveur
 
 # --- Étape 3 : qualité — couverture (gcov/gcovr) et analyse statique ------------
 FROM outils AS qualite
@@ -56,6 +61,15 @@ RUN clang-tidy -p build/linux-gcc-couverture --quiet \
         --checks='-*,bugprone-*,performance-*,modernize-use-nullptr,readability-else-after-return,-bugprone-easily-swappable-parameters' \
         $(find src -name '*.cpp') > /rapports/clang-tidy.txt 2>/dev/null || true
 
+# --- Étape 3 bis : client Qt (Qt 6.4 d'Ubuntu) et ses tests QtTest -----------------
+# Les tests unitaires Qt s'exécutent ici ; le test d'IHM système (tst_fenetre) est lancé par
+# « docker compose run --rm tests-qt », contre le conteneur du serveur.
+FROM outils AS qt
+RUN apt-get update  && apt-get install -y --no-install-recommends qt6-base-dev libgl-dev fonts-dejavu-core  && rm -rf /var/lib/apt/lists/*
+COPY qt-client /src/qt-client
+WORKDIR /src/qt-client
+RUN cmake --preset linux-qt && cmake --build --preset linux-qt && ctest --preset linux-qt -L qt-unitaire
+
 # --- Étape 4 : export des rapports vers le poste (docker build --output) ---------
 FROM scratch AS rapports
 COPY --from=qualite /rapports /
@@ -64,7 +78,7 @@ COPY --from=qualite /rapports /
 # DERNIÈRE étape = cible par défaut de « docker build » (les étapes inutiles sont ignorées)
 FROM ubuntu:24.04 AS execution
 WORKDIR /app
-COPY --from=build /src/build/linux-gcc/src/puissance4_serveur /app/puissance4_serveur
+COPY --from=release /src/build/linux-gcc-release/src/puissance4_serveur /app/puissance4_serveur
 COPY web /app/web
 EXPOSE 8080
 CMD ["/app/puissance4_serveur", "--port", "8080", "--web", "/app/web"]

@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:56:12
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #include "adaptateurs/entree/rest/PartieJson.hpp"
 
 #include <string>
@@ -22,6 +22,18 @@ nlohmann::json versJson(const domaine::Partie& partie) {
         }
         grille.push_back(texte);
     }
+    // une seule lecture de l'optional, vérifiée
+    nlohmann::json dernierCoup = nullptr;
+    if (const auto& coup = partie.dernierCoup(); coup.has_value()) {
+        dernierCoup = {{"colonne", coup->colonne},
+                       {"ligne", coup->ligne},
+                       {"couleur", std::string(domaine::versTexte(coup->couleur))},
+                       {"joueur", coup->joueur}};
+    }
+    nlohmann::json vainqueur = nullptr;
+    if (const auto& gagnant = partie.vainqueur(); gagnant.has_value()) {
+        vainqueur = gagnant->nom();
+    }
     return {
         {"id", partie.id()},
         {"statut", std::string(domaine::versTexte(partie.statut()))},
@@ -30,13 +42,8 @@ nlohmann::json versJson(const domaine::Partie& partie) {
         {"joueurCourant", partie.joueurCourant().nom()},
         {"grille", grille},
         {"nombreDeCoups", partie.nombreDeCoups()},
-        {"vainqueur", partie.vainqueur() ? nlohmann::json(partie.vainqueur()->nom()) : nlohmann::json(nullptr)},
-        {"dernierCoup", partie.dernierCoup()
-                            ? nlohmann::json{{"colonne", partie.dernierCoup()->colonne},
-                                             {"ligne", partie.dernierCoup()->ligne},
-                                             {"couleur", std::string(domaine::versTexte(partie.dernierCoup()->couleur))},
-                                             {"joueur", partie.dernierCoup()->joueur}}
-                            : nlohmann::json(nullptr)},
+        {"vainqueur", vainqueur},
+        {"dernierCoup", dernierCoup},
     };
 }
 

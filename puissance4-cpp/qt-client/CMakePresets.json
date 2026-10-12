@@ -1,0 +1,60 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-mingw-qt",
+      "displayName": "Windows - Qt 6.11 MinGW 13.1 + Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.11.1/mingw_64",
+        "CMAKE_C_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe"
+      },
+      "environment": { "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.11.1/mingw_64/bin;$penv{PATH}" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "linux-qt",
+      "displayName": "Linux - Qt 6 du système + GCC + Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-mingw-qt", "configurePreset": "windows-mingw-qt" },
+    { "name": "linux-qt", "configurePreset": "linux-qt" }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-mingw-qt",
+      "configurePreset": "windows-mingw-qt",
+      "output": { "outputOnFailure": true },
+      "environment": { "PATH": "C:/Qt/6.11.1/mingw_64/bin;C:/Qt/Tools/mingw1310_64/bin;$penv{PATH}" }
+    },
+    { "name": "linux-qt", "configurePreset": "linux-qt", "output": { "outputOnFailure": true } }
+  ],
+  "workflowPresets": [
+    {
+      "name": "windows-mingw-qt",
+      "steps": [
+        { "type": "configure", "name": "windows-mingw-qt" },
+        { "type": "build", "name": "windows-mingw-qt" },
+        { "type": "test", "name": "windows-mingw-qt" }
+      ]
+    },
+    {
+      "name": "linux-qt",
+      "steps": [
+        { "type": "configure", "name": "linux-qt" },
+        { "type": "build", "name": "linux-qt" },
+        { "type": "test", "name": "linux-qt" }
+      ]
+    }
+  ]
+}

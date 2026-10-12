@@ -1,0 +1,23 @@
+meta {
+  name: 03 Nom vide refuse
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/parties
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "joueur1": "   ",
+    "joueur2": "Bob"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.erreur: eq Le nom du joueur est obligatoire
+}

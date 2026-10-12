@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:11:04
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:48:21
 #include "adaptateurs/entree/rest/ServeurRest.hpp"
 
 #include "adaptateurs/entree/rest/PartieJson.hpp"
@@ -44,7 +44,7 @@ void ServeurRest::declarerRoutes() {
     serveur_->set_default_headers({{"Access-Control-Allow-Origin", "*"}});
 
     serveur_->Get("/api/sante", [](const httplib::Request&, httplib::Response& reponse) {
-        reponse.set_content(nlohmann::json{{"statut", "OK"}, {"version", "1.1.0-iteration2"}}.dump(),
+        reponse.set_content(nlohmann::json{{"statut", "OK"}, {"version", "1.3.0-iteration4"}}.dump(),
                             TYPE_JSON);
     });
 
@@ -102,6 +102,8 @@ void ServeurRest::declarerRoutes() {
         } catch (const application::PartieInconnue& erreur) {
             repondreErreur(reponse, 404, erreur.what());
         } catch (const domaine::ColonnePleine& erreur) {
+            repondreErreur(reponse, 409, erreur.what());
+        } catch (const domaine::PartieTerminee& erreur) {  // EX-17
             repondreErreur(reponse, 409, erreur.what());
         } catch (const std::invalid_argument& erreur) {
             repondreErreur(reponse, 400, erreur.what());

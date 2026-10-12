@@ -5,3 +5,13 @@ build/
 .idea/
 *.user
 rapports/
+tests/systeme/node_modules/
+tests/systeme/resultats/
+tests/systeme/test-results/
+qt-client/build/
+tests/systeme/api/
+tests/systeme/ihm/
+tests/systeme/charge/
+tests/systeme/*.json
+tests/systeme/*.ts
+tests/systeme/charge-gatling/

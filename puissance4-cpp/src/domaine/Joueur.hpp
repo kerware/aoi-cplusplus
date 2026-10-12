@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #pragma once
 
 #include "domaine/Jeton.hpp"
@@ -14,7 +14,7 @@ public:
 
     // Lève std::invalid_argument si le nom est vide/blanc, trop long,
     // ou si la couleur est Jeton::Vide.
-    Joueur(std::string nom, Jeton couleur);
+    Joueur(const std::string& nom, Jeton couleur);  // 
 
     const std::string& nom() const { return nom_; }
     Jeton couleur() const { return couleur_; }

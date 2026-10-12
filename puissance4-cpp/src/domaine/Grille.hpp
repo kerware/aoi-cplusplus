@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:56:37
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #pragma once
 
 #include "domaine/Jeton.hpp"
@@ -32,6 +32,9 @@ public:
 
     // Itération 3 : le jeton en (ligne, colonne) fait-il partie d'un alignement de 4 (EX-14) ?
     bool aligneQuatre(int ligne, int colonne) const;
+
+    // Plus aucune case libre (EX-16 : match nul).
+    bool estPleine() const;
 
 private:
     // Nombre de jetons de la couleur donnée, consécutifs à partir de la case voisine

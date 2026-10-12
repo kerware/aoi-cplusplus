@@ -1,8 +1,9 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 // Test unitaire du cas d'utilisation : les ports de sortie sont remplacés
 // par des bouchons GoogleMock. Aucun adaptateur réel n'est utilisé.
 #include "application/ServicePartie.hpp"
 #include "application/Erreurs.hpp"
+#include "domaine/Erreurs.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -13,6 +14,7 @@ using namespace p4;
 using ::testing::_;
 using ::testing::Property;
 using ::testing::Return;
+using ::testing::InSequence;
 using ::testing::StrictMock;
 
 namespace {
@@ -113,4 +115,40 @@ TEST_F(ServicePartieTest, jouer_dans_une_partie_inconnue_leve_PartieInconnue) {
     EXPECT_CALL(repository, sauvegarder(_)).Times(0);
 
     EXPECT_THROW(service.jouer("P0404", 3), application::PartieInconnue);
+}
+
+// --- GoogleMock : ordre des appels et partie terminée --------------------
+
+TEST_F(ServicePartieTest, jouer_lit_la_partie_puis_la_sauvegarde_dans_cet_ordre) {
+    InSequence ordre;  // les attentes suivantes doivent être satisfaites dans l'ordre
+    EXPECT_CALL(repository, trouverParId("P0001"))
+        .WillOnce(Return(domaine::Partie("P0001", "Alice", "Bob")));
+    EXPECT_CALL(repository, sauvegarder(_));
+
+    service.jouer("P0001", 0);
+}
+
+TEST_F(ServicePartieTest, jouer_dans_une_partie_terminee_ne_sauvegarde_rien) {
+    domaine::Partie gagnee("P0001", "Alice", "Bob");
+    for (int i = 0; i < 3; ++i) {
+        gagnee.jouer(0);
+        gagnee.jouer(1);
+    }
+    gagnee.jouer(0);
+    EXPECT_CALL(repository, trouverParId("P0001")).WillOnce(Return(gagnee));
+    EXPECT_CALL(repository, sauvegarder(_)).Times(0);
+
+    EXPECT_THROW(service.jouer("P0001", 3), domaine::PartieTerminee);
+}
+
+// Un coup refusé (colonne pleine) ne sauvegarde rien
+TEST_F(ServicePartieTest, un_coup_refuse_ne_sauvegarde_rien) {
+    domaine::Partie partie("P0001", "Alice", "Bob");
+    for (int i = 0; i < domaine::Grille::LIGNES; ++i) {
+        partie.jouer(0);
+    }
+    EXPECT_CALL(repository, trouverParId("P0001")).WillOnce(Return(partie));
+    EXPECT_CALL(repository, sauvegarder(_)).Times(0);
+
+    EXPECT_THROW(service.jouer("P0001", 0), domaine::ColonnePleine);
 }

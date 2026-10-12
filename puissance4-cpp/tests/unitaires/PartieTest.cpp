@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #include "domaine/Partie.hpp"
 #include "domaine/Erreurs.hpp"
 
@@ -118,4 +118,58 @@ TEST_F(PartieTest, quatre_jetons_alignes_horizontalement_font_gagner_le_joueur) 
 
 TEST_F(PartieTest, une_partie_neuve_n_a_pas_de_vainqueur) {
     EXPECT_FALSE(partie.vainqueur().has_value());
+}
+
+// --- Fin de partie : victoire verticale, match nul, partie terminée -----------
+
+TEST_F(PartieTest, quatre_jetons_empiles_font_gagner_le_joueur) {
+    for (int i = 0; i < 3; ++i) {
+        partie.jouer(0);  // Alice
+        partie.jouer(1);  // Bob
+    }
+
+    partie.jouer(0);
+
+    EXPECT_EQ(partie.statut(), StatutPartie::Gagnee);
+    EXPECT_EQ(partie.vainqueur()->nom(), "Alice");
+}
+
+// Séquence de 42 coups sans aucun alignement de 4 (EX-16)
+constexpr int SEQUENCE_NULLE[] = {5, 4, 5, 0, 6, 2, 4, 5, 5, 0, 4, 1, 1, 0, 4, 5, 6, 5, 3, 1, 1, 2, 2, 6, 2, 6, 6, 3, 6, 2, 0, 3, 0, 3, 3, 4, 3, 1, 4, 2, 1, 0};
+
+TEST_F(PartieTest, une_grille_pleine_sans_alignement_donne_un_match_nul) {
+    for (int colonne : SEQUENCE_NULLE) {
+        ASSERT_EQ(partie.statut(), StatutPartie::EnCours);
+        partie.jouer(colonne);
+    }
+
+    EXPECT_EQ(partie.statut(), StatutPartie::Nulle);
+    EXPECT_FALSE(partie.vainqueur().has_value());
+    EXPECT_EQ(partie.nombreDeCoups(), 42);
+}
+
+TEST_F(PartieTest, jouer_apres_une_victoire_leve_PartieTerminee) {
+    for (int i = 0; i < 3; ++i) {
+        partie.jouer(0);
+        partie.jouer(1);
+    }
+    partie.jouer(0);  // victoire d'Alice
+
+    EXPECT_THROW(partie.jouer(5), p4::domaine::PartieTerminee);
+    EXPECT_EQ(partie.nombreDeCoups(), 7);
+}
+
+// Test ajouté après le test de mutation : le mutant « match nul vérifié avant la
+// victoire » survivait. Ici, le 42e et dernier coup (Bob) aligne 4 jetons : c'est une victoire.
+constexpr int SEQUENCE_VICTOIRE_AU_DERNIER_COUP[] = {5, 6, 1, 3, 6, 1, 4, 4, 5, 1, 0, 3, 1, 5, 2, 0, 0, 6, 1, 0, 4, 5, 2, 0, 4, 5, 0, 4, 2, 4, 5, 1, 6, 2, 6, 2, 2, 3, 3, 6, 3, 3};
+
+TEST_F(PartieTest, une_victoire_sur_le_dernier_coup_est_une_victoire_et_pas_un_nul) {
+    for (int colonne : SEQUENCE_VICTOIRE_AU_DERNIER_COUP) {
+        ASSERT_EQ(partie.statut(), StatutPartie::EnCours);
+        partie.jouer(colonne);
+    }
+
+    EXPECT_TRUE(partie.grille().estPleine());
+    EXPECT_EQ(partie.statut(), StatutPartie::Gagnee);
+    EXPECT_EQ(partie.vainqueur()->nom(), "Bob");
 }

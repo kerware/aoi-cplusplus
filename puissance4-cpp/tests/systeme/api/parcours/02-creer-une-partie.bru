@@ -1,0 +1,40 @@
+meta {
+  name: 02 Creer une partie
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/parties
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "joueur1": "Alice",
+    "joueur2": "Bob"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.statut: eq EN_COURS
+  res.body.joueurCourant: eq Alice
+}
+
+script:post-response {
+  // L'identifiant est lu dans la reponse, jamais suppose (EX-01, EX-04)
+  bru.setVar("idPartie", res.getBody().id);
+}
+
+tests {
+  test("l'en-tete Location designe la partie creee (EX-01)", function () {
+    expect(res.getHeader("location")).to.equal("/api/parties/" + res.getBody().id);
+  });
+  test("la grille est vide : 6 lignes de 7 cases", function () {
+    const grille = res.getBody().grille;
+    expect(grille).to.have.lengthOf(6);
+    grille.forEach((ligne) => expect(ligne).to.equal("......."));
+  });
+}

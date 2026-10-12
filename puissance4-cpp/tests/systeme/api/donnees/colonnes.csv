@@ -1,0 +1,8 @@
+colonne,statutAttendu,partition
+-1,400,limite basse invalide
+0,200,limite basse valide
+6,200,limite haute valide
+7,400,limite haute invalide
+2.9,400,nombre non entier
+"""3""",400,texte
+null,400,valeur nulle

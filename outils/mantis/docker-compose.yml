@@ -1,0 +1,39 @@
+# Dernière génération/modification faite par l'IA Claude le 09/10/2026 18:15:47
+# ---------------------------------------------------------------------------
+# Mantis Bug Tracker 2.22 + MariaDB 10.11 pour la formation AOI (chapitre 4)
+#   Démarrer : docker compose up -d
+#   Installer (une seule fois) : http://localhost:8989/admin/install.php
+#       Type de base : MySQL Improved ; hôte : mariadb ; base, utilisateur, mot de passe : voir ci-dessous
+#       puis se connecter avec le compte administrateur créé par l'installation
+#   Arrêter  : docker compose stop        (arrêt propre, données conservées)
+# ---------------------------------------------------------------------------
+name: formation-aoi-mantis
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: racine-formation
+      MARIADB_DATABASE: mantisbt
+      MARIADB_USER: mantisbt
+      MARIADB_PASSWORD: mantis-formation
+    volumes:
+      - mantis_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mantisbt:
+    image: vimagick/mantisbt:latest
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "8989:80"
+    volumes:
+      - ./config_inc.php:/var/www/html/config/config_inc.php:ro
+
+volumes:
+  mantis_db:

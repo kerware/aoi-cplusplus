@@ -1,0 +1,30 @@
+meta {
+  name: 04 Jouer un coup
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/parties/{{idPartie}}/coups
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "colonne": 3
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.joueurCourant: eq Bob
+  res.body.nombreDeCoups: eq 1
+  res.body.dernierCoup.ligne: eq 5
+}
+
+tests {
+  test("le jeton rouge est tombe en bas de la colonne 3 (EX-06)", function () {
+    expect(res.getBody().grille[5]).to.equal("...R...");
+  });
+}

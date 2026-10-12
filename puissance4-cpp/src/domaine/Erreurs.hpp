@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #pragma once
 
 #include <stdexcept>
@@ -19,6 +19,12 @@ class ColonnePleine : public std::logic_error {
 public:
     explicit ColonnePleine(int colonne)
         : std::logic_error("Colonne pleine : " + std::to_string(colonne)) {}
+};
+
+// Coup refusé car la partie est terminée (EX-17). Traduit en HTTP 409.
+class PartieTerminee : public std::logic_error {
+public:
+    PartieTerminee() : std::logic_error("Partie terminée : plus aucun coup n'est accepté") {}
 };
 
 } // namespace p4::domaine

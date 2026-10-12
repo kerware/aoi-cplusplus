@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:55:30
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #pragma once
 
 #include "domaine/Grille.hpp"
@@ -12,7 +12,7 @@ namespace p4::domaine {
 
 using IdPartie = std::string;
 
-enum class StatutPartie { EnCours, Gagnee };
+enum class StatutPartie { EnCours, Gagnee, Nulle };
 
 std::string_view versTexte(StatutPartie statut);
 
@@ -36,7 +36,7 @@ public:
 
     // Itération 2 : le joueur courant joue dans la colonne (EX-06),
     // puis la main passe à l'adversaire (EX-07).
-    // Lève CoupInvalide ou ColonnePleine ; dans ce cas la partie est inchangée.
+    // Lève CoupInvalide, ColonnePleine ou PartieTerminee ; dans ce cas la partie est inchangée.
     Coup jouer(int colonne);
 
     const IdPartie& id() const { return id_; }

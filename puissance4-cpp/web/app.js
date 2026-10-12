@@ -1,5 +1,5 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:57:18
-// IHM HTML5 de l'itération 3 : crée une partie, joue en cliquant sur une colonne (EX-12), annonce la fin.
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:48:21
+// IHM HTML5 de l'itération 4 : crée une partie, joue (EX-12), annonce la fin (EX-15) et l'état final (EX-18).
 "use strict";
 
 const formulaire = document.getElementById("formulaire-partie");
@@ -58,6 +58,14 @@ function afficherColonnes(partie) {
 
 function afficherPartie(partie) {
   partieCourante = partie;
+  // EX-18 : à la fin de la partie, l'état final remplace « au tour de … »
+  const enCours = partie.statut === "EN_COURS";
+  document.getElementById("tour").hidden = !enCours;
+  const finPartie = document.getElementById("fin-partie");
+  finPartie.hidden = enCours;
+  if (!enCours) {
+    finPartie.textContent = "Partie terminée — victoire de " + partie.vainqueur;
+  }
   document.getElementById("id-partie").textContent = partie.id;
   document.getElementById("joueur-courant").textContent = partie.joueurCourant;
   document.getElementById("nombre-coups").textContent = partie.nombreDeCoups;

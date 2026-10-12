@@ -5,3 +5,7 @@ build/
 *.user
 CMakeUserPresets.json
 rapports/
+tests/systeme/node_modules/
+tests/systeme/resultats/
+tests/systeme/test-results/
+tests/systeme/charge-gatling/target/

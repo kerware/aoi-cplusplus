@@ -1,0 +1,22 @@
+meta {
+  name: 05 Partie inconnue
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/parties/P9999/coups
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "colonne": 3
+  }
+}
+
+assert {
+  res.status: eq 404
+  res.body.erreur: eq Partie inconnue : P9999
+}

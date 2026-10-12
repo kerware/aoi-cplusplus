@@ -1,0 +1,23 @@
+meta {
+  name: 06 Consulter la partie
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/parties/{{idPartie}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.nombreDeCoups: eq 1
+  res.body.vainqueur: isNull
+}
+
+tests {
+  test("le temps de reponse est inferieur a 200 ms", function () {
+    expect(res.getResponseTime()).to.be.below(200);
+  });
+}

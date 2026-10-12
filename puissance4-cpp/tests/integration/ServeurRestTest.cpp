@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 // Test d'intégration : le VRAI serveur HTTP est démarré sur un port libre,
 // branché sur le vrai service et le vrai repository en mémoire.
 // Un client HTTP (cpp-httplib) l'interroge comme le ferait l'IHM.
@@ -238,4 +238,30 @@ TEST_F(ServeurRestTest, une_victoire_horizontale_est_renvoyee_par_l_api) {
     const json partie = json::parse(reponse->body);
     EXPECT_EQ(partie["statut"], "GAGNEE");
     EXPECT_EQ(partie["vainqueur"], "Alice");
+}
+
+// --- Fin de partie dans l'API (EX-15, EX-16, EX-17) -------------------
+
+TEST_F(ServeurRestTest, un_coup_apres_la_victoire_repond_409) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+    for (int colonne : {0, 0, 1, 1, 2, 2, 3}) {
+        client->Post("/api/parties/P0001/coups", json{{"colonne", colonne}}.dump(), TYPE_JSON);
+    }
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({"colonne":5})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 409);
+    EXPECT_EQ(json::parse(reponse->body)["erreur"], "Partie terminée : plus aucun coup n'est accepté");
+}
+
+TEST_F(ServeurRestTest, une_grille_pleine_sans_alignement_donne_le_statut_NULLE) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+    for (int colonne : {5, 4, 5, 0, 6, 2, 4, 5, 5, 0, 4, 1, 1, 0, 4, 5, 6, 5, 3, 1, 1, 2, 2, 6, 2, 6, 6, 3, 6, 2, 0, 3, 0, 3, 3, 4, 3, 1, 4, 2, 1, 0}) {
+        client->Post("/api/parties/P0001/coups", json{{"colonne", colonne}}.dump(), TYPE_JSON);
+    }
+
+    const json partie = json::parse(client->Get("/api/parties/P0001")->body);
+    EXPECT_EQ(partie["statut"], "NULLE");
+    EXPECT_TRUE(partie["vainqueur"].is_null());
 }

@@ -1,0 +1,79 @@
+# Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:49:56
+# ---------------------------------------------------------------------------
+# Environnement de test système (Linux) : le serveur et les outils de test
+# partagent le même réseau Docker (pas de NAT entre l'injecteur et le serveur).
+#
+#   docker compose up -d serveur                 # serveur Release sur http://localhost:8080
+#   docker compose run --rm tests-cpp            # tests système GoogleTest (API)
+#   docker compose run --rm tests-api            # Bruno (API)
+#   docker compose run --rm tests-ihm            # Playwright (Chromium + Firefox)
+#   docker compose run --rm tests-qt             # QtTest : client Qt piloté contre le serveur
+#   docker compose run --rm charge               # k6 (EX-13)
+#   docker compose run --rm charge-gatling       # Gatling, même scénario (rapport : tests/systeme/charge-gatling/target/gatling)
+#   docker compose down                          # arrêt propre
+# ---------------------------------------------------------------------------
+name: puissance4-it4
+
+services:
+  serveur:
+    build: { context: ., target: execution }
+    image: puissance4:iteration4
+    ports: ["8080:8080"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  tests-cpp:
+    build: { context: ., target: build }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    command: ctest --preset linux-gcc -L systeme --output-junit /resultats/ctest-systeme.xml
+    volumes: ["./tests/systeme/resultats:/resultats"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-api:
+    image: node:22-bookworm-slim
+    profiles: [tests]
+    working_dir: /tests
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && cd api && npx bru run parcours --env docker --reporter-junit ../resultats/bruno-docker.xml"
+    volumes: ["./tests/systeme:/tests", "node_modules_linux:/tests/node_modules"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-ihm:
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    profiles: [tests]
+    working_dir: /tests
+    environment: { P4_URL: "http://serveur:8080", CI: "1" }
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && npx playwright test"
+    volumes: ["./tests/systeme:/tests", "node_modules_linux:/tests/node_modules"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-qt:
+    build: { context: ., target: qt }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    command: ctest --preset linux-qt --output-junit /resultats/ctest-qt.xml
+    volumes: ["./tests/systeme/resultats:/resultats"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  charge:
+    image: grafana/k6:2.3.0
+    profiles: [charge]
+    environment: { P4_URL: "http://serveur:8080" }
+    command: run /scripts/charge-coups.js --summary-export /resultats/k6-resume.json
+    volumes: ["./tests/systeme/charge:/scripts:ro", "./tests/systeme/resultats:/resultats"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  charge-gatling:
+    image: maven:3.9.11-eclipse-temurin-21
+    profiles: [charge]
+    working_dir: /gatling
+    command: mvn -q -B gatling:test -Dp4.url=http://serveur:8080
+    volumes: ["./tests/systeme/charge-gatling:/gatling", "depot_maven:/root/.m2"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+volumes:
+  node_modules_linux:
+  depot_maven:

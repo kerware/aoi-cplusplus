@@ -1,0 +1,15 @@
+{
+  "name": "puissance4-tests-systeme",
+  "private": true,
+  "description": "Tests système du fil rouge Puissance 4 : API (Bruno), IHM web (Playwright)",
+  "scripts": {
+    "api": "cd api && bru run parcours --env local",
+    "api:partitions": "cd api && bru run partitions-colonne --env local --csv-file-path donnees/colonnes.csv",
+    "ihm": "playwright test",
+    "ihm:rapport": "playwright show-report resultats/playwright-rapport"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@usebruno/cli": "4.2.1"
+  }
+}

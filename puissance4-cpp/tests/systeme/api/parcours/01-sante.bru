@@ -1,0 +1,22 @@
+meta {
+  name: 01 Sante
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/sante
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.statut: eq OK
+}
+
+tests {
+  test("la version est renseignee", function () {
+    expect(res.getBody().version).to.be.a("string");
+  });
+}

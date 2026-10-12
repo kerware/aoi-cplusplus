@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:11:04
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
 #include "domaine/Grille.hpp"
 
 #include "domaine/Erreurs.hpp"
@@ -16,8 +16,8 @@ struct Direction {
 };
 
 // Directions examinées pour détecter un alignement (chacune est parcourue dans les deux sens).
-// Itération 3 : seule la direction horizontale est gérée pour l'instant.
-constexpr std::array<Direction, 1> DIRECTIONS{{{0, 1}}};
+// horizontale, verticale, diagonale descendante, diagonale montante.
+constexpr std::array<Direction, 4> DIRECTIONS{{{0, 1}, {1, 0}, {1, 1}, {1, -1}}};
 
 } // namespace
 
@@ -31,11 +31,14 @@ Jeton Grille::caseEn(int ligne, int colonne) const {
 
 bool Grille::estVide() const { return nombreDeJetons() == 0; }
 
+bool Grille::estPleine() const { return nombreDeJetons() == LIGNES * COLONNES; }
+
 int Grille::nombreDeJetons() const {
     int total = 0;
     for (const auto& ligne : cases_) {
         for (Jeton jeton : ligne) {
             if (jeton != Jeton::Vide) {
+                // cppcheck-suppress useStlAlgorithm ; boucle imbriquée plus lisible qu'un count_if dans un accumulate
                 ++total;
             }
         }
@@ -81,6 +84,7 @@ bool Grille::aligneQuatre(int ligne, int colonne) const {
     if (jeton == Jeton::Vide) {
         return false;
     }
+    // cppcheck-suppress useStlAlgorithm ; un any_of avec lambda à deux appels n'apporte rien ici
     for (const Direction& d : DIRECTIONS) {
         const int alignes = 1 + compterDansLaDirection(ligne, colonne, d.dLigne, d.dColonne, jeton) +
                             compterDansLaDirection(ligne, colonne, -d.dLigne, -d.dColonne, jeton);

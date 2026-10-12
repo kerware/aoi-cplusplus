@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 18:09:25 -->
+<!-- Test de charge Gatling (Java DSL), équivalent du script k6 charge/charge-coups.js (EX-13).
+     mvn gatling:test -Dp4.url=http://127.0.0.1:8080        rapport HTML : target/gatling/<simulation>/index.html -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>formation.aoi</groupId>
+  <artifactId>puissance4-charge-gatling</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <gatling.version>3.11.5</gatling.version>
+    <gatling-maven-plugin.version>4.9.6</gatling-maven-plugin.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.gatling.highcharts</groupId>
+      <artifactId>gatling-charts-highcharts</artifactId>
+      <version>${gatling.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.gatling</groupId>
+        <artifactId>gatling-maven-plugin</artifactId>
+        <version>${gatling-maven-plugin.version}</version>
+        <configuration>
+          <simulationClass>puissance4.ChargeCoupsSimulation</simulationClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
