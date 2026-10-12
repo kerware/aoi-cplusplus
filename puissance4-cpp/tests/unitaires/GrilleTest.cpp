@@ -1,11 +1,14 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #include "domaine/Grille.hpp"
+#include "domaine/Erreurs.hpp"
 
 #include <gtest/gtest.h>
 
 #include <stdexcept>
 #include <utility>
 
+using p4::domaine::ColonnePleine;
+using p4::domaine::CoupInvalide;
 using p4::domaine::Grille;
 using p4::domaine::Jeton;
 
@@ -44,4 +47,44 @@ TEST(GrilleTest, les_coins_de_la_grille_sont_accessibles) {
 
     EXPECT_NO_THROW((void)grille.caseEn(0, 0));
     EXPECT_NO_THROW((void)grille.caseEn(5, 6));
+}
+
+// --- Itération 2 : jouer un coup (EX-06, EX-08, EX-09) ----------------------
+
+TEST(GrilleJouerTest, un_jeton_joue_dans_une_colonne_vide_tombe_en_bas) {
+    Grille grille;
+
+    const int ligne = grille.jouer(3, Jeton::Rouge);
+
+    EXPECT_EQ(ligne, 5);
+    EXPECT_EQ(grille.caseEn(5, 3), Jeton::Rouge);
+    EXPECT_EQ(grille.nombreDeJetons(), 1);
+}
+
+TEST(GrilleJouerTest, les_jetons_s_empilent_dans_une_colonne) {
+    Grille grille;
+    grille.jouer(0, Jeton::Rouge);
+
+    const int ligne = grille.jouer(0, Jeton::Jaune);
+
+    EXPECT_EQ(ligne, 4);
+    EXPECT_EQ(grille.caseEn(4, 0), Jeton::Jaune);
+}
+
+TEST(GrilleJouerTest, jouer_dans_une_colonne_pleine_leve_ColonnePleine) {
+    Grille grille;
+    for (int i = 0; i < Grille::LIGNES; ++i) {
+        grille.jouer(6, i % 2 ? Jeton::Jaune : Jeton::Rouge);
+    }
+
+    EXPECT_TRUE(grille.colonnePleine(6));
+    EXPECT_THROW(grille.jouer(6, Jeton::Rouge), ColonnePleine);
+    EXPECT_EQ(grille.nombreDeJetons(), 6);
+}
+
+TEST(GrilleJouerTest, jouer_dans_une_colonne_negative_leve_CoupInvalide) {
+    Grille grille;
+
+    EXPECT_THROW(grille.jouer(-1, Jeton::Rouge), CoupInvalide);
+    EXPECT_TRUE(grille.estVide());
 }

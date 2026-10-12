@@ -8,6 +8,7 @@ Le projet grandit d'une itération par chapitre de la formation. Chaque itérati
 | Étiquette | Chapitre | Contenu |
 |---|---|---|
 | `iteration-1` | 1. Démarche de tests | créer une partie : squelette multi-plate-forme (CMake, Docker), architecture hexagonale, premiers tests GoogleTest |
+| `iteration-2` | 2. Analyse et conception | jouer un coup ; exigences EX-01 à EX-13 ; Squash TM |
 
 ```bash
 git clone https://github.com/kerware/aoi-cplusplus.git
@@ -20,6 +21,7 @@ git checkout iteration-1      # revenir à l'état d'une itération donnée
 |---|---|
 | [`installation/`](installation/) | **à faire en premier** : note d'installation Windows 11 (C++20, MSVC) et script de vérification du poste |
 | [`puissance4-cpp/`](puissance4-cpp/README.md) | le projet : serveur, IHM HTML5, tests ; **mode d'emploi complet dans son README** |
+| `outils/squash-tm/` | Squash TM 14 + PostgreSQL (gestion des exigences et des cas de test) |
 
 ## Prérequis
 
@@ -38,6 +40,8 @@ Démarrage rapide (PowerShell, dans `puissance4-cpp`) :
 cmake --workflow --preset windows-msvc     # Windows : configure, compile, teste
 docker build -t puissance4 .              # Linux : compile et teste dans Docker
 ```
+
+> Les fichiers de `outils/` contiennent des mots de passe **de démonstration**, réservés à un poste de formation : ne pas les réutiliser.
 
 ## Licence
 

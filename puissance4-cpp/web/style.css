@@ -1,4 +1,4 @@
-/* Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00 */
+/* Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00 */
 :root {
   --bleu: #2f5897;
   --bleu-fonce: #1e3d6e;
@@ -40,6 +40,12 @@ button:hover { background: var(--bleu-fonce); }
   display: grid; grid-template-columns: repeat(7, 56px); gap: 8px;
   width: max-content; padding: 12px; border-radius: 12px; background: var(--bleu);
 }
+.colonnes {
+  display: grid; grid-template-columns: repeat(7, 56px); gap: 8px;
+  width: max-content; padding: 0 12px 6px;
+}
+.colonnes button { padding: 6px 0; font-size: 14px; }
+.colonnes button:disabled { background: #b8c2cf; cursor: default; }
 .case { width: 56px; height: 56px; border-radius: 50%; background: #fff; }
 .case.R { background: var(--rouge); }
 .case.J { background: var(--jaune); }

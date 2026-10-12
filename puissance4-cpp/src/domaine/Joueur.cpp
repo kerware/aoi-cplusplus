@@ -1,7 +1,8 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #include "domaine/Joueur.hpp"
 
 #include <stdexcept>
+#include <string>
 
 namespace p4::domaine {
 
@@ -35,7 +36,8 @@ Joueur::Joueur(std::string nom, Jeton couleur)
         throw std::invalid_argument("Le nom du joueur est obligatoire");
     }
     if (nombreDeCaracteres(nom_) > LONGUEUR_MAX_NOM) {
-        throw std::invalid_argument("Le nom du joueur ne doit pas dépasser 20 caractères");
+        throw std::invalid_argument("Le nom du joueur ne doit pas dépasser " +
+                                    std::to_string(LONGUEUR_MAX_NOM) + " caractères");
     }
     if (couleur_ == Jeton::Vide) {
         throw std::invalid_argument("Un joueur doit avoir la couleur ROUGE ou JAUNE");

@@ -1,5 +1,7 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #include "application/ServicePartie.hpp"
+
+#include "application/Erreurs.hpp"
 
 namespace p4::application {
 
@@ -7,8 +9,9 @@ ServicePartie::ServicePartie(PartieRepository& repository, GenerateurIdentifiant
     : repository_(repository), generateur_(generateur) {}
 
 domaine::Partie ServicePartie::creer(const DemandeCreationPartie& demande) {
-    // Le constructeur de Partie valide les noms : en cas d'erreur,
-    // l'exception remonte et rien n'est sauvegardé.
+    // Valider AVANT de consommer un identifiant : pas de trou dans la numérotation (EX-04).
+    domaine::Partie::verifierNoms(demande.nomJoueur1, demande.nomJoueur2);
+
     domaine::Partie partie(generateur_.suivant(), demande.nomJoueur1, demande.nomJoueur2);
     repository_.sauvegarder(partie);
     return partie;
@@ -16,6 +19,16 @@ domaine::Partie ServicePartie::creer(const DemandeCreationPartie& demande) {
 
 std::optional<domaine::Partie> ServicePartie::consulter(const domaine::IdPartie& id) const {
     return repository_.trouverParId(id);
+}
+
+domaine::Partie ServicePartie::jouer(const domaine::IdPartie& id, int colonne) {
+    std::optional<domaine::Partie> partie = repository_.trouverParId(id);
+    if (!partie) {
+        throw PartieInconnue(id);
+    }
+    partie->jouer(colonne);  // lève si le coup est refusé : rien n'est sauvegardé
+    repository_.sauvegarder(*partie);
+    return *partie;
 }
 
 } // namespace p4::application

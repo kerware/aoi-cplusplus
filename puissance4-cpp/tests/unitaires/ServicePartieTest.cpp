@@ -1,7 +1,8 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 // Test unitaire du cas d'utilisation : les ports de sortie sont remplacés
 // par des bouchons GoogleMock. Aucun adaptateur réel n'est utilisé.
 #include "application/ServicePartie.hpp"
+#include "application/Erreurs.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -54,11 +55,29 @@ TEST_F(ServicePartieTest, creer_une_partie_la_sauvegarde_dans_le_repository) {
     service.creer({"Alice", "Bob"});
 }
 
+// [TP1 - ex. 5] Ce test existant attendait un appel au générateur (WillOnce) :
+// avec la correction, le générateur n'est plus appelé et le test échouait.
+// On retire cette attente devenue fausse — un test qui casse après une
+// correction est un signal à analyser, pas à faire taire.
 TEST_F(ServicePartieTest, une_demande_invalide_ne_sauvegarde_rien) {
-    EXPECT_CALL(generateur, suivant()).WillOnce(Return("P0001"));
     EXPECT_CALL(repository, sauvegarder(_)).Times(0);
 
     EXPECT_THROW(service.creer({"", "Bob"}), std::invalid_argument);
+}
+
+// [TP1 - ex. 5] Test qui révèle le défaut "numéro consommé" (rouge avant correction)
+TEST_F(ServicePartieTest, une_demande_invalide_ne_consomme_pas_d_identifiant) {
+    EXPECT_CALL(generateur, suivant()).Times(0);
+
+    EXPECT_THROW(service.creer({"", "Bob"}), std::invalid_argument);
+}
+
+// [TP1 - ex. 6]
+TEST_F(ServicePartieTest, deux_noms_identiques_sont_refuses_sans_rien_consommer) {
+    EXPECT_CALL(generateur, suivant()).Times(0);
+    EXPECT_CALL(repository, sauvegarder(_)).Times(0);
+
+    EXPECT_THROW(service.creer({"Alice", "alice"}), std::invalid_argument);
 }
 
 TEST_F(ServicePartieTest, consulter_une_partie_existante_la_retourne) {
@@ -75,4 +94,23 @@ TEST_F(ServicePartieTest, consulter_une_partie_inconnue_ne_retourne_rien) {
     EXPECT_CALL(repository, trouverParId("P9999")).WillOnce(Return(std::nullopt));
 
     EXPECT_FALSE(service.consulter("P9999").has_value());
+}
+
+// --- Itération 2 : jouer un coup ---------------------------------------------
+
+TEST_F(ServicePartieTest, jouer_un_coup_sauvegarde_la_partie_a_jour) {
+    EXPECT_CALL(repository, trouverParId("P0001"))
+        .WillOnce(Return(domaine::Partie("P0001", "Alice", "Bob")));
+    EXPECT_CALL(repository, sauvegarder(Property(&domaine::Partie::nombreDeCoups, 1)));
+
+    const domaine::Partie partie = service.jouer("P0001", 3);
+
+    EXPECT_EQ(partie.joueurCourant().nom(), "Bob");
+}
+
+TEST_F(ServicePartieTest, jouer_dans_une_partie_inconnue_leve_PartieInconnue) {
+    EXPECT_CALL(repository, trouverParId("P0404")).WillOnce(Return(std::nullopt));
+    EXPECT_CALL(repository, sauvegarder(_)).Times(0);
+
+    EXPECT_THROW(service.jouer("P0404", 3), application::PartieInconnue);
 }

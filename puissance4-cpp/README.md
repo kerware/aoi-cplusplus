@@ -1,13 +1,13 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00 -->
+<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:53:58 -->
 # Puissance 4 — projet fil rouge de la formation AOI
 
 Serveur de jeu Puissance 4 en **C++20**, exposé par une **API REST**, construit en
 **architecture hexagonale** (ports et adaptateurs). Il est compilé et testé sur
 **Windows 11 (MSVC)** et **Linux (GCC, via Docker)**.
 
-> **Itération 1 — mise en place (walking skeleton)** : créer une partie et la consulter.
-> Une fonctionnalité minimale, mais toutes les couches sont traversées :
-> IHM HTML5 → REST → cas d'utilisation → domaine → stockage.
+> **Itération 2 — jouer un coup** (chapitre 2 de la formation). Base : itération 1 + corrigé du TP 1.
+> Le joueur courant choisit une colonne, le jeton tombe, la main passe à l'adversaire.
+> Exigences : [docs/exigences.md](docs/exigences.md) (EX-01 à EX-13).
 
 ## Architecture
 
@@ -15,6 +15,7 @@ Serveur de jeu Puissance 4 en **C++20**, exposé par une **API REST**, construit
             ADAPTATEURS D'ENTRÉE                    ADAPTATEURS DE SORTIE
    IHM HTML5 ──HTTP──► ServeurRest ──► [CreerPartie]      [PartieRepository] ◄── PartieRepositoryEnMemoire
                         (cpp-httplib)   [ConsulterPartie]  [GenerateurIdentifiant] ◄── GenerateurIdentifiantSequentiel
+                                        [JouerCoup]
                                               │                      ▲
                                               ▼                      │
                                         ServicePartie  ──────────────┘
@@ -45,7 +46,7 @@ téléchargées automatiquement par `FetchContent` à la première configuration
 ### Windows 11 (MSVC)
 
 ```powershell
-cmake --workflow --preset windows-msvc          # configure + compile + 39 tests
+cmake --workflow --preset windows-msvc          # configure + compile + 60 tests
 # ou étape par étape :
 cmake --preset windows-msvc
 cmake --build --preset windows-msvc
@@ -56,8 +57,8 @@ ctest --preset windows-msvc-unitaires            # uniquement le label "unitaire
 ### Linux (via Docker)
 
 ```powershell
-docker build -t puissance4:iteration1 .          # compile + teste sous GCC ; échoue si un test échoue
-docker run --rm -it -p 8080:8080 puissance4:iteration1
+docker build -t puissance4:iteration2 .          # compile + teste sous GCC ; échoue si un test échoue
+docker run --rm -it -p 8080:8080 puissance4:iteration2
 ```
 
 Shell interactif dans la chaîne de compilation Linux (sources montées) :
@@ -77,24 +78,25 @@ cmake --workflow --preset linux-gcc
 
 Ouvrir <http://localhost:8080> pour l'IHM HTML5. Arrêt propre : taper `q` puis Entrée.
 
-## API REST (itération 1)
+## API REST (itération 2)
 
 | Méthode | Chemin               | Corps                                   | Réponses |
 |---------|----------------------|-----------------------------------------|----------|
 | GET     | `/api/sante`         | —                                       | 200 `{"statut":"OK"}` |
 | POST    | `/api/parties`       | `{"joueur1":"Alice","joueur2":"Bob"}`   | 201 + `Location` · 400 si invalide |
 | GET     | `/api/parties/{id}`  | —                                       | 200 · 404 si inconnue |
+| POST    | `/api/parties/{id}/coups` | `{"colonne":3}`                   | 200 · 400 colonne invalide · 404 · 409 colonne pleine |
 
 ```powershell
 curl.exe -s -X POST http://localhost:8080/api/parties -H "Content-Type: application/json" -d '{\"joueur1\":\"Alice\",\"joueur2\":\"Bob\"}'
 ```
 
-## Les tests de l'itération 1
+## Les tests de l'itération 2
 
 | Niveau        | Exécutable          | Nombre | Outils |
 |---------------|---------------------|--------|--------|
-| Unitaire      | `tests_unitaires`   | 26     | GoogleTest, GoogleMock (bouchons des ports de sortie) |
-| Intégration   | `tests_integration` | 13     | GoogleTest + client HTTP cpp-httplib sur un port libre |
+| Unitaire      | `tests_unitaires`   | 41     | GoogleTest, GoogleMock (bouchons des ports de sortie) |
+| Intégration   | `tests_integration` | 19     | GoogleTest + client HTTP cpp-httplib sur un port libre |
 | Système (E2E) | —                   | à venir (chapitre 4) | Playwright, Bruno, k6 |
 
 ## Feuille de route du fil rouge

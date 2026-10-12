@@ -1,8 +1,9 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #pragma once
 
 #include "application/ports/entree/ConsulterPartie.hpp"
 #include "application/ports/entree/CreerPartie.hpp"
+#include "application/ports/entree/JouerCoup.hpp"
 
 #include <memory>
 #include <string>
@@ -15,11 +16,14 @@ namespace p4::adaptateurs {
 //   GET  /api/sante            -> 200 {"statut":"OK", "version":...}
 //   POST /api/parties          -> 201 + Location (400 si demande invalide)
 //   GET  /api/parties/{id}     -> 200 (404 si inconnue)
+//   POST /api/parties/{id}/coups {"colonne":3}
+//                              -> 200 (400 colonne invalide, 404 partie inconnue, 409 colonne pleine)
 //   GET  /                     -> IHM HTML5 (fichiers statiques de dossierWeb)
 class ServeurRest {
 public:
     ServeurRest(application::CreerPartie& creerPartie,
                 application::ConsulterPartie& consulterPartie,
+                application::JouerCoup& jouerCoup,
                 std::string dossierWeb = {});
     ~ServeurRest();
 
@@ -41,6 +45,7 @@ private:
 
     application::CreerPartie& creerPartie_;
     application::ConsulterPartie& consulterPartie_;
+    application::JouerCoup& jouerCoup_;
     std::string dossierWeb_;
     std::unique_ptr<httplib::Server> serveur_;
 };

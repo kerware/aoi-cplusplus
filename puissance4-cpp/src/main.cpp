@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 // ---------------------------------------------------------------------------
 // Point d'entrée = "composition root" de l'architecture hexagonale :
 // c'est le SEUL endroit qui connaît à la fois le domaine et les adaptateurs.
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     p4::application::ServicePartie service(repository, generateur);
 
     // 3. Adaptateur d'entrée, branché sur les ports d'entrée
-    p4::adaptateurs::ServeurRest serveur(service, service, configuration.dossierWeb);
+    p4::adaptateurs::ServeurRest serveur(service, service, service, configuration.dossierWeb);
 
     const int port = serveur.lier(configuration.hote, configuration.port);
     if (port < 0) {

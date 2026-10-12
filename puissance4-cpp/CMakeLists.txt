@@ -1,12 +1,12 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+# Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 # ---------------------------------------------------------------------------
 # Puissance 4 — Projet fil rouge de la formation AOI
-# Itération 1 : mise en place (walking skeleton) — créer et consulter une partie
+# Itération 2 : jouer un coup (base : itération 1 + corrigé du TP 1)
 # Compilation multi-plateforme : Windows 11 (MSVC) et Linux (GCC, via Docker)
 # ---------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.25)
 project(puissance4
-        VERSION 1.0.0
+        VERSION 1.1.0
         DESCRIPTION "Serveur Puissance 4 REST en C++ - architecture hexagonale"
         LANGUAGES CXX)
 

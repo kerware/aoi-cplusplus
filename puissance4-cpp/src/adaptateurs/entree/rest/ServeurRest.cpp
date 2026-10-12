@@ -1,7 +1,9 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #include "adaptateurs/entree/rest/ServeurRest.hpp"
 
 #include "adaptateurs/entree/rest/PartieJson.hpp"
+#include "application/Erreurs.hpp"
+#include "domaine/Erreurs.hpp"
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
@@ -24,9 +26,11 @@ void repondreErreur(httplib::Response& reponse, int statut, const std::string& m
 
 ServeurRest::ServeurRest(application::CreerPartie& creerPartie,
                          application::ConsulterPartie& consulterPartie,
+                         application::JouerCoup& jouerCoup,
                          std::string dossierWeb)
     : creerPartie_(creerPartie),
       consulterPartie_(consulterPartie),
+      jouerCoup_(jouerCoup),
       dossierWeb_(std::move(dossierWeb)),
       serveur_(std::make_unique<httplib::Server>()) {
     declarerRoutes();
@@ -38,7 +42,7 @@ void ServeurRest::declarerRoutes() {
     serveur_->set_default_headers({{"Access-Control-Allow-Origin", "*"}});
 
     serveur_->Get("/api/sante", [](const httplib::Request&, httplib::Response& reponse) {
-        reponse.set_content(nlohmann::json{{"statut", "OK"}, {"version", "1.0.0-iteration1"}}.dump(),
+        reponse.set_content(nlohmann::json{{"statut", "OK"}, {"version", "1.1.0-iteration2"}}.dump(),
                             TYPE_JSON);
     });
 
@@ -71,6 +75,28 @@ void ServeurRest::declarerRoutes() {
             return;
         }
         reponse.set_content(versJson(*partie).dump(), TYPE_JSON);
+    });
+
+    // Itération 2 : jouer un coup (EX-06 à EX-11)
+    serveur_->Post(R"(/api/parties/([A-Za-z0-9_-]+)/coups)",
+                   [this](const httplib::Request& requete, httplib::Response& reponse) {
+        const auto corps = nlohmann::json::parse(requete.body, nullptr, /*exceptions*/ false);
+        if (corps.is_discarded() || !corps.is_object() || !corps.contains("colonne") ||
+            !corps["colonne"].is_number()) {
+            repondreErreur(reponse, 400, "Colonne invalide : doit être un entier entre 0 et 6");
+            return;
+        }
+        try {
+            const int colonne = corps["colonne"].get<int>();
+            const domaine::Partie partie = jouerCoup_.jouer(requete.matches[1].str(), colonne);
+            reponse.set_content(versJson(partie).dump(), TYPE_JSON);
+        } catch (const application::PartieInconnue& erreur) {
+            repondreErreur(reponse, 404, erreur.what());
+        } catch (const domaine::ColonnePleine& erreur) {
+            repondreErreur(reponse, 409, erreur.what());
+        } catch (const std::invalid_argument& erreur) {
+            repondreErreur(reponse, 400, erreur.what());
+        }
     });
 
     if (!dossierWeb_.empty()) {

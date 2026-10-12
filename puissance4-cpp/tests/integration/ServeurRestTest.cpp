@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 // Test d'intégration : le VRAI serveur HTTP est démarré sur un port libre,
 // branché sur le vrai service et le vrai repository en mémoire.
 // Un client HTTP (cpp-httplib) l'interroge comme le ferait l'IHM.
@@ -45,7 +45,7 @@ protected:
     adaptateurs::PartieRepositoryEnMemoire repository;
     adaptateurs::GenerateurIdentifiantSequentiel generateur;
     application::ServicePartie service{repository, generateur};
-    adaptateurs::ServeurRest serveur{service, service, P4_DOSSIER_WEB};
+    adaptateurs::ServeurRest serveur{service, service, service, P4_DOSSIER_WEB};
     std::thread ecoute;
     int port = 0;
     std::unique_ptr<httplib::Client> client;
@@ -111,6 +111,26 @@ TEST_F(ServeurRestTest, un_nom_de_joueur_vide_repond_400_sans_creer_de_partie) {
     EXPECT_EQ(repository.nombreDeParties(), 0u);
 }
 
+// [TP1 - ex. 6]
+TEST_F(ServeurRestTest, deux_joueurs_de_meme_nom_repond_400) {
+    const auto reponse = client->Post("/api/parties", R"({"joueur1":"Alice","joueur2":"ALICE"})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 400);
+    EXPECT_EQ(json::parse(reponse->body)["erreur"], "Les deux joueurs doivent avoir des noms différents");
+    EXPECT_EQ(repository.nombreDeParties(), 0u);
+}
+
+// [TP1 - ex. 5] Reproduction automatisée de l'anomalie observée dans l'IHM
+TEST_F(ServeurRestTest, une_creation_refusee_ne_consomme_pas_de_numero_de_partie) {
+    client->Post("/api/parties", R"({"joueur1":"","joueur2":"Bob"})", TYPE_JSON);
+
+    const auto reponse = client->Post("/api/parties", R"({"joueur1":"Alice","joueur2":"Bob"})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->get_header_value("Location"), "/api/parties/P0001");
+}
+
 TEST_F(ServeurRestTest, un_nom_de_type_incorrect_repond_400) {
     const auto reponse = client->Post("/api/parties", R"({"joueur1":42,"joueur2":"Bob"})", TYPE_JSON);
 
@@ -124,4 +144,53 @@ TEST_F(ServeurRestTest, la_racine_sert_l_ihm_html5) {
     ASSERT_TRUE(reponse);
     EXPECT_EQ(reponse->status, 200);
     EXPECT_NE(reponse->body.find("Puissance 4"), std::string::npos);
+}
+
+// --- Itération 2 : POST /api/parties/{id}/coups --------------------------------
+
+namespace {
+constexpr const char* NOUVELLE_PARTIE = R"({"joueur1":"Alice","joueur2":"Bob"})";
+}
+
+TEST_F(ServeurRestTest, jouer_un_coup_repond_200_avec_la_grille_a_jour) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({"colonne":3})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 200);
+    const json partie = json::parse(reponse->body);
+    EXPECT_EQ(partie["grille"][5], "...R...");
+    EXPECT_EQ(partie["joueurCourant"], "Bob");
+    EXPECT_EQ(partie["nombreDeCoups"], 1);
+    EXPECT_EQ(partie["dernierCoup"]["ligne"], 5);
+}
+
+TEST_F(ServeurRestTest, jouer_dans_une_partie_inconnue_repond_404) {
+    const auto reponse = client->Post("/api/parties/P0404/coups", R"({"colonne":3})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 404);
+}
+
+TEST_F(ServeurRestTest, jouer_dans_une_colonne_pleine_repond_409) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+    for (int i = 0; i < 6; ++i) {
+        client->Post("/api/parties/P0001/coups", R"({"colonne":0})", TYPE_JSON);
+    }
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({"colonne":0})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 409);
+    EXPECT_EQ(json::parse(client->Get("/api/parties/P0001")->body)["nombreDeCoups"], 6);
+}
+
+TEST_F(ServeurRestTest, jouer_sans_colonne_repond_400) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 400);
 }

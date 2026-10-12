@@ -1,0 +1,44 @@
+# Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:30:00
+# ---------------------------------------------------------------------------
+# Squash TM 14 + PostgreSQL 16 pour la formation AOI (chapitre 2)
+#   Démarrer : docker compose up -d        (premier démarrage : 2 à 3 minutes)
+#   URL      : http://localhost:8090/squash  (compte par défaut : admin / admin123)
+#   Arrêter  : docker compose stop         (arrêt propre, données conservées)
+#   NE PAS utiliser « docker kill » : la base doit s'arrêter proprement.
+# ---------------------------------------------------------------------------
+name: formation-aoi-squash
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: squashtm
+      POSTGRES_USER: squashtm
+      POSTGRES_PASSWORD: squashtm-formation
+    volumes:
+      - squash_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U squashtm -d squashtm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  squash-tm:
+    image: squashtest/squash:14.0.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SQTM_DB_TYPE: postgresql
+      SQTM_DB_HOST: postgres
+      SQTM_DB_PORT: "5432"
+      SQTM_DB_NAME: squashtm
+      SQTM_DB_USERNAME: squashtm
+      SQTM_DB_PASSWORD: squashtm-formation
+      JAVA_OPTS: "-Xms256m -Xmx1024m"
+    ports:
+      - "8090:8080"
+    stop_grace_period: 60s
+
+volumes:
+  squash_db:

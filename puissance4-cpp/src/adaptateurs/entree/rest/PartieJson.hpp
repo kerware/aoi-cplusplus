@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
 #pragma once
 
 #include "domaine/Partie.hpp"
@@ -10,10 +10,12 @@ namespace p4::adaptateurs {
 // Traduction domaine -> JSON (le domaine ne connaît pas JSON).
 // Exemple :
 // {
-//   "id": "P0001", "statut": "EN_COURS", "joueurCourant": "Alice",
+//   "id": "P0001", "statut": "EN_COURS", "joueurCourant": "Bob",
 //   "joueur1": {"nom": "Alice", "couleur": "ROUGE"},
 //   "joueur2": {"nom": "Bob",   "couleur": "JAUNE"},
-//   "grille": [".......", ".......", ".......", ".......", ".......", "......."]
+//   "nombreDeCoups": 1,
+//   "dernierCoup": {"colonne": 3, "ligne": 5, "couleur": "ROUGE", "joueur": "Alice"},
+//   "grille": [".......", ".......", ".......", ".......", ".......", "...R..."]
 // }
 nlohmann::json versJson(const domaine::Partie& partie);
 
