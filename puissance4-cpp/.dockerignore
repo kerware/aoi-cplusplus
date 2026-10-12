@@ -1,0 +1,6 @@
+build/
+.git/
+.vs/
+.vscode/
+.idea/
+*.user

@@ -1,0 +1,41 @@
+<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00 -->
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Puissance 4 — Itération 1</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Puissance 4</h1>
+    <p class="sous-titre">Projet fil rouge — itération 1 : créer une partie</p>
+  </header>
+
+  <main>
+    <form id="formulaire-partie" data-testid="formulaire-partie">
+      <label><span>Joueur 1 <span class="pastille rouge"></span></span>
+        <input id="joueur1" name="joueur1" data-testid="joueur1" maxlength="20" required>
+      </label>
+      <label><span>Joueur 2 <span class="pastille jaune"></span></span>
+        <input id="joueur2" name="joueur2" data-testid="joueur2" maxlength="20" required>
+      </label>
+      <button type="submit" data-testid="nouvelle-partie">Nouvelle partie</button>
+    </form>
+
+    <p id="message" data-testid="message" role="status"></p>
+
+    <section id="partie" hidden>
+      <p class="infos">
+        Partie <strong id="id-partie" data-testid="id-partie"></strong> —
+        au tour de <strong id="joueur-courant" data-testid="joueur-courant"></strong>
+      </p>
+      <div id="grille" class="grille" data-testid="grille"></div>
+    </section>
+  </main>
+
+  <footer>Serveur C++ · API REST · architecture hexagonale</footer>
+  <script src="app.js"></script>
+</body>
+</html>

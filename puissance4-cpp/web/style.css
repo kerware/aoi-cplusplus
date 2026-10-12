@@ -1,0 +1,46 @@
+/* Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00 */
+:root {
+  --bleu: #2f5897;
+  --bleu-fonce: #1e3d6e;
+  --rouge: #d64545;
+  --jaune: #f2c230;
+  --texte: #2b2b2b;
+  --fond: #f4f6f9;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--texte);
+  background: var(--fond);
+}
+header { background: var(--bleu); color: #fff; padding: 18px 32px; }
+header h1 { margin: 0; font-size: 28px; }
+.sous-titre { margin: 4px 0 0; opacity: .85; }
+main { max-width: 720px; margin: 24px auto; padding: 0 16px; }
+form {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+  background: #fff; padding: 16px 20px; border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+input { padding: 8px 10px; border: 1px solid #c5ccd6; border-radius: 6px; font-size: 15px; }
+button {
+  padding: 9px 18px; border: 0; border-radius: 6px; font-size: 15px; font-weight: 600;
+  background: var(--bleu); color: #fff; cursor: pointer;
+}
+button:hover { background: var(--bleu-fonce); }
+.pastille { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; }
+.pastille.rouge { background: var(--rouge); }
+.pastille.jaune { background: var(--jaune); }
+#message { min-height: 1.4em; font-weight: 600; }
+#message.erreur { color: var(--rouge); }
+.infos { font-size: 17px; }
+.grille {
+  display: grid; grid-template-columns: repeat(7, 56px); gap: 8px;
+  width: max-content; padding: 12px; border-radius: 12px; background: var(--bleu);
+}
+.case { width: 56px; height: 56px; border-radius: 50%; background: #fff; }
+.case.R { background: var(--rouge); }
+.case.J { background: var(--jaune); }
+footer { text-align: center; color: #7a8594; font-size: 13px; margin: 32px 0 16px; }

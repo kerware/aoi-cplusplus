@@ -1,0 +1,14 @@
+# Produits de compilation et d'exécution des tests
+build/
+rapports/
+tests/systeme/node_modules/
+tests/systeme/resultats/
+tests/systeme/test-results/
+tests/systeme/charge-gatling/target/
+qt-client/build/
+# Environnements de développement
+.vs/
+.vscode/
+.idea/
+*.user
+CMakeUserPresets.json

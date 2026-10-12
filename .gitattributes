@@ -1,0 +1,4 @@
+# Fins de ligne LF dans le dépôt (scripts et fichiers lus sous Linux / Docker)
+* text=auto eol=lf
+*.png binary
+*.xls binary
