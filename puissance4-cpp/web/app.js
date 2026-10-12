@@ -1,5 +1,5 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
-// IHM HTML5 de l'itération 2 : crée une partie, puis joue en cliquant sur une colonne (EX-12).
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:57:18
+// IHM HTML5 de l'itération 3 : crée une partie, joue en cliquant sur une colonne (EX-12), annonce la fin.
 "use strict";
 
 const formulaire = document.getElementById("formulaire-partie");
@@ -28,7 +28,13 @@ async function jouer(colonne) {
       return;
     }
     const coup = corps.dernierCoup;
-    afficherMessage(coup.joueur + " a joué en colonne " + (coup.colonne + 1), false);
+    if (corps.statut === "GAGNEE") {
+      afficherMessage("Victoire de " + corps.vainqueur + " !", false);
+    } else if (corps.statut === "NULLE") {
+      afficherMessage("Match nul : la grille est pleine.", false);
+    } else {
+      afficherMessage(coup.joueur + " a joué en colonne " + (coup.colonne + 1), false);
+    }
     afficherPartie(corps);
   } catch (erreur) {
     afficherMessage("Serveur injoignable : " + erreur.message, true);
@@ -44,7 +50,7 @@ function afficherColonnes(partie) {
     bouton.textContent = "▼";
     bouton.title = "Jouer en colonne " + (c + 1);
     bouton.dataset.testid = "colonne-" + c;
-    bouton.disabled = partie.grille[0][c] !== ".";
+    bouton.disabled = partie.statut !== "EN_COURS" || partie.grille[0][c] !== ".";
     bouton.addEventListener("click", () => jouer(c));
     colonnes.appendChild(bouton);
   }

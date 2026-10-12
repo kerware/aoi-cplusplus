@@ -9,6 +9,7 @@ Le projet grandit d'une itération par chapitre de la formation. Chaque itérati
 |---|---|---|
 | `iteration-1` | 1. Démarche de tests | créer une partie : squelette multi-plate-forme (CMake, Docker), architecture hexagonale, premiers tests GoogleTest |
 | `iteration-2` | 2. Analyse et conception | jouer un coup ; exigences EX-01 à EX-13 ; Squash TM |
+| `iteration-3` | 3. Tests unitaires | fin de partie (victoire) en TDD ; GoogleMock ; couverture gcov / gcovr ; cppcheck, clang-tidy |
 
 ```bash
 git clone https://github.com/kerware/aoi-cplusplus.git

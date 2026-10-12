@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:56:12
 #include "domaine/Partie.hpp"
 
 #include <cctype>
@@ -21,6 +21,7 @@ std::string enMinuscules(std::string texte) {
 
 std::string_view versTexte(StatutPartie statut) {
     switch (statut) {
+        case StatutPartie::Gagnee: return "GAGNEE";
         case StatutPartie::EnCours: break;
     }
     return "EN_COURS";
@@ -51,6 +52,11 @@ Coup Partie::jouer(int colonne) {
     Coup coup{colonne, ligne, joueur.couleur(), joueur.nom()};
     dernierCoup_ = coup;
     ++nombreDeCoups_;
+    if (grille_.aligneQuatre(ligne, colonne)) {
+        statut_ = StatutPartie::Gagnee;
+        vainqueur_ = joueur;
+        return coup;
+    }
     tourDuJoueur1_ = !tourDuJoueur1_;
     return coup;
 }

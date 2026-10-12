@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:56:37
 #pragma once
 
 #include "domaine/Jeton.hpp"
@@ -30,7 +30,14 @@ public:
     // Lève CoupInvalide si la colonne n'existe pas, ColonnePleine si elle est remplie.
     int jouer(int colonne, Jeton jeton);
 
+    // Itération 3 : le jeton en (ligne, colonne) fait-il partie d'un alignement de 4 (EX-14) ?
+    bool aligneQuatre(int ligne, int colonne) const;
+
 private:
+    // Nombre de jetons de la couleur donnée, consécutifs à partir de la case voisine
+    // de (ligne, colonne) dans la direction (dLigne, dColonne).
+    int compterDansLaDirection(int ligne, int colonne, int dLigne, int dColonne, Jeton jeton) const;
+
     std::array<std::array<Jeton, COLONNES>, LIGNES> cases_{};  // tout à Jeton::Vide
 };
 

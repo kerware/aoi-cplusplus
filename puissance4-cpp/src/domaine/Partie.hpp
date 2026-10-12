@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:55:30
 #pragma once
 
 #include "domaine/Grille.hpp"
@@ -12,7 +12,7 @@ namespace p4::domaine {
 
 using IdPartie = std::string;
 
-enum class StatutPartie { EnCours };
+enum class StatutPartie { EnCours, Gagnee };
 
 std::string_view versTexte(StatutPartie statut);
 
@@ -47,6 +47,7 @@ public:
     StatutPartie statut() const { return statut_; }
     int nombreDeCoups() const { return nombreDeCoups_; }
     const std::optional<Coup>& dernierCoup() const { return dernierCoup_; }
+    const std::optional<Joueur>& vainqueur() const { return vainqueur_; }
 
 private:
     IdPartie id_;
@@ -57,6 +58,7 @@ private:
     bool tourDuJoueur1_ = true;
     int nombreDeCoups_ = 0;
     std::optional<Coup> dernierCoup_;
+    std::optional<Joueur> vainqueur_;
 };
 
 } // namespace p4::domaine

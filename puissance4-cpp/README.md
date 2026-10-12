@@ -1,13 +1,13 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:53:58 -->
+<!-- Dernière génération/modification faite par l'IA Claude le 12/10/2026 23:09:26 -->
 # Puissance 4 — projet fil rouge de la formation AOI
 
 Serveur de jeu Puissance 4 en **C++20**, exposé par une **API REST**, construit en
 **architecture hexagonale** (ports et adaptateurs). Il est compilé et testé sur
 **Windows 11 (MSVC)** et **Linux (GCC, via Docker)**.
 
-> **Itération 2 — jouer un coup** (chapitre 2 de la formation). Base : itération 1 + corrigé du TP 1.
-> Le joueur courant choisit une colonne, le jeton tombe, la main passe à l'adversaire.
-> Exigences : [docs/exigences.md](docs/exigences.md) (EX-01 à EX-13).
+> **Itération 3 — fin de partie** (chapitre 3 de la formation). Base : itération 2 + corrigé du TP 2.
+> Victoire **horizontale** développée en TDD (démonstration du cours) ; verticale, diagonales, match nul et
+> partie terminée sont à réaliser dans le TP 3.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ téléchargées automatiquement par `FetchContent` à la première configuration
 ### Windows 11 (MSVC)
 
 ```powershell
-cmake --workflow --preset windows-msvc          # configure + compile + 60 tests
+cmake --workflow --preset windows-msvc          # configure + compile + 79 tests
 # ou étape par étape :
 cmake --preset windows-msvc
 cmake --build --preset windows-msvc
@@ -57,8 +57,8 @@ ctest --preset windows-msvc-unitaires            # uniquement le label "unitaire
 ### Linux (via Docker)
 
 ```powershell
-docker build -t puissance4:iteration2 .          # compile + teste sous GCC ; échoue si un test échoue
-docker run --rm -it -p 8080:8080 puissance4:iteration2
+docker build -t puissance4:iteration3 .          # compile + teste sous GCC ; échoue si un test échoue
+docker run --rm -it -p 8080:8080 puissance4:iteration3
 ```
 
 Shell interactif dans la chaîne de compilation Linux (sources montées) :
@@ -70,6 +70,17 @@ docker run --rm -it -v "${PWD}:/src" p4-outils bash
 cmake --workflow --preset linux-gcc
 ```
 
+## Qualité : couverture et analyse statique (Linux, via Docker)
+
+```powershell
+docker build --target rapports --output type=local,dest=rapports .
+```
+
+Produit dans `rapports/` : `couverture/index.html` (gcovr, détail par fichier), `couverture-lignes.txt`,
+`couverture-decisions.txt`, `couverture-branches.txt` (sans branches d'exceptions), `couverture-branches-brutes.txt`,
+`couverture-cobertura.xml`, `cppcheck.txt` / `cppcheck.xml`, `clang-tidy.txt`.
+Preset utilisé : `linux-gcc-couverture` (`--coverage -O0`).
+
 ## Lancer le serveur
 
 ```powershell
@@ -78,7 +89,7 @@ cmake --workflow --preset linux-gcc
 
 Ouvrir <http://localhost:8080> pour l'IHM HTML5. Arrêt propre : taper `q` puis Entrée.
 
-## API REST (itération 2)
+## API REST (itération 3)
 
 | Méthode | Chemin               | Corps                                   | Réponses |
 |---------|----------------------|-----------------------------------------|----------|
@@ -95,8 +106,8 @@ curl.exe -s -X POST http://localhost:8080/api/parties -H "Content-Type: applicat
 
 | Niveau        | Exécutable          | Nombre | Outils |
 |---------------|---------------------|--------|--------|
-| Unitaire      | `tests_unitaires`   | 41     | GoogleTest, GoogleMock (bouchons des ports de sortie) |
-| Intégration   | `tests_integration` | 19     | GoogleTest + client HTTP cpp-httplib sur un port libre |
+| Unitaire      | `tests_unitaires`   | 53     | GoogleTest, GoogleMock (bouchons des ports de sortie) |
+| Intégration   | `tests_integration` | 26     | GoogleTest + client HTTP cpp-httplib sur un port libre |
 | Système (E2E) | —                   | à venir (chapitre 4) | Playwright, Bruno, k6 |
 
 ## Feuille de route du fil rouge

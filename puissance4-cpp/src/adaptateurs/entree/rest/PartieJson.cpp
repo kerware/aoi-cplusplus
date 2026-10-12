@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:56:12
 #include "adaptateurs/entree/rest/PartieJson.hpp"
 
 #include <string>
@@ -30,6 +30,7 @@ nlohmann::json versJson(const domaine::Partie& partie) {
         {"joueurCourant", partie.joueurCourant().nom()},
         {"grille", grille},
         {"nombreDeCoups", partie.nombreDeCoups()},
+        {"vainqueur", partie.vainqueur() ? nlohmann::json(partie.vainqueur()->nom()) : nlohmann::json(nullptr)},
         {"dernierCoup", partie.dernierCoup()
                             ? nlohmann::json{{"colonne", partie.dernierCoup()->colonne},
                                              {"ligne", partie.dernierCoup()->ligne},

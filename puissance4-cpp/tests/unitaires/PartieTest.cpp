@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
 #include "domaine/Partie.hpp"
 #include "domaine/Erreurs.hpp"
 
@@ -98,4 +98,24 @@ TEST_F(PartieTest, un_coup_dans_une_colonne_pleine_ne_change_pas_la_main) {
     EXPECT_THROW(partie.jouer(0), p4::domaine::ColonnePleine);
     EXPECT_EQ(partie.joueurCourant(), courantAvant);
     EXPECT_EQ(partie.nombreDeCoups(), 6);
+}
+
+// --- Itération 3 (TDD) : victoire horizontale (EX-14, EX-15) ------------------
+
+TEST_F(PartieTest, quatre_jetons_alignes_horizontalement_font_gagner_le_joueur) {
+    for (int colonne = 0; colonne < 3; ++colonne) {
+        partie.jouer(colonne);  // Alice, ligne du bas
+        partie.jouer(colonne);  // Bob, au-dessus
+    }
+    EXPECT_EQ(partie.statut(), StatutPartie::EnCours);
+
+    partie.jouer(3);  // Alice aligne 4 jetons
+
+    EXPECT_EQ(partie.statut(), StatutPartie::Gagnee);
+    ASSERT_TRUE(partie.vainqueur().has_value());
+    EXPECT_EQ(partie.vainqueur()->nom(), "Alice");
+}
+
+TEST_F(PartieTest, une_partie_neuve_n_a_pas_de_vainqueur) {
+    EXPECT_FALSE(partie.vainqueur().has_value());
 }

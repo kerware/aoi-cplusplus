@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:11:04
 #include "adaptateurs/entree/rest/ServeurRest.hpp"
 
 #include "adaptateurs/entree/rest/PartieJson.hpp"
@@ -8,6 +8,8 @@
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 
+#include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <utility>
 
@@ -81,13 +83,20 @@ void ServeurRest::declarerRoutes() {
     serveur_->Post(R"(/api/parties/([A-Za-z0-9_-]+)/coups)",
                    [this](const httplib::Request& requete, httplib::Response& reponse) {
         const auto corps = nlohmann::json::parse(requete.body, nullptr, /*exceptions*/ false);
+        // EX-08 exige un ENTIER : seuls les entiers JSON représentables en int sont acceptés
+        // (convertir un nombre hors de la plage d'int serait un comportement indéfini).
         if (corps.is_discarded() || !corps.is_object() || !corps.contains("colonne") ||
-            !corps["colonne"].is_number()) {
+            !corps["colonne"].is_number_integer()) {
+            repondreErreur(reponse, 400, "Colonne invalide : doit être un entier entre 0 et 6");
+            return;
+        }
+        const auto valeur = corps["colonne"].get<std::int64_t>();
+        if (valeur < std::numeric_limits<int>::min() || valeur > std::numeric_limits<int>::max()) {
             repondreErreur(reponse, 400, "Colonne invalide : doit être un entier entre 0 et 6");
             return;
         }
         try {
-            const int colonne = corps["colonne"].get<int>();
+            const int colonne = static_cast<int>(valeur);
             const domaine::Partie partie = jouerCoup_.jouer(requete.matches[1].str(), colonne);
             reponse.set_content(versJson(partie).dump(), TYPE_JSON);
         } catch (const application::PartieInconnue& erreur) {

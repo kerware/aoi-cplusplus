@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
 // Test d'intégration : le VRAI serveur HTTP est démarré sur un port libre,
 // branché sur le vrai service et le vrai repository en mémoire.
 // Un client HTTP (cpp-httplib) l'interroge comme le ferait l'IHM.
@@ -193,4 +193,49 @@ TEST_F(ServeurRestTest, jouer_sans_colonne_repond_400) {
 
     ASSERT_TRUE(reponse);
     EXPECT_EQ(reponse->status, 400);
+}
+
+// --- [TP2] Tests issus de la conception (partitions EX-08) --------------------
+
+TEST_F(ServeurRestTest, CT_08_03_jouer_en_colonne_7_repond_400) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({"colonne":7})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 400);
+}
+
+class ServeurRestColonnesNonEntieresTest : public ServeurRestTest,
+                                           public ::testing::WithParamInterface<const char*> {};
+
+TEST_P(ServeurRestColonnesNonEntieresTest, CT_08_04_une_colonne_non_entiere_repond_400_sans_jouer) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", GetParam(), TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 400);
+    EXPECT_EQ(json::parse(client->Get("/api/parties/P0001")->body)["nombreDeCoups"], 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(EX08, ServeurRestColonnesNonEntieresTest,
+                         ::testing::Values(R"({"colonne":2.9})", R"({"colonne":"3"})", R"({"colonne":1e20})",
+                                           R"({"colonne":9999999999})", R"({"colonne":null})"));
+
+// --- Itération 3 : la victoire est visible dans l'API (EX-15) -------------------
+
+TEST_F(ServeurRestTest, une_victoire_horizontale_est_renvoyee_par_l_api) {
+    client->Post("/api/parties", NOUVELLE_PARTIE, TYPE_JSON);
+    for (int colonne : {0, 0, 1, 1, 2, 2}) {
+        client->Post("/api/parties/P0001/coups", json{{"colonne", colonne}}.dump(), TYPE_JSON);
+    }
+
+    const auto reponse = client->Post("/api/parties/P0001/coups", R"({"colonne":3})", TYPE_JSON);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 200);
+    const json partie = json::parse(reponse->body);
+    EXPECT_EQ(partie["statut"], "GAGNEE");
+    EXPECT_EQ(partie["vainqueur"], "Alice");
 }

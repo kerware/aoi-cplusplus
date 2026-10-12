@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:54:22
 #include "domaine/Grille.hpp"
 #include "domaine/Erreurs.hpp"
 
@@ -87,4 +87,75 @@ TEST(GrilleJouerTest, jouer_dans_une_colonne_negative_leve_CoupInvalide) {
 
     EXPECT_THROW(grille.jouer(-1, Jeton::Rouge), CoupInvalide);
     EXPECT_TRUE(grille.estVide());
+}
+
+// --- [TP2] Tests issus de la conception (valeurs limites EX-08) ---------------
+// Nommés d'après les cas de test Squash TM : CT-08-01 et CT-08-03.
+
+class GrilleColonnesValidesTest : public ::testing::TestWithParam<int> {};
+
+TEST_P(GrilleColonnesValidesTest, CT_08_01_une_colonne_limite_valide_est_acceptee) {
+    Grille grille;
+
+    EXPECT_EQ(grille.jouer(GetParam(), Jeton::Rouge), 5);
+}
+
+INSTANTIATE_TEST_SUITE_P(EX08, GrilleColonnesValidesTest, ::testing::Values(0, 6));
+
+class GrilleColonnesInvalidesTest : public ::testing::TestWithParam<int> {};
+
+TEST_P(GrilleColonnesInvalidesTest, CT_08_03_une_colonne_hors_grille_leve_CoupInvalide) {
+    Grille grille;
+
+    EXPECT_THROW(grille.jouer(GetParam(), Jeton::Rouge), CoupInvalide);
+    EXPECT_TRUE(grille.estVide());
+}
+
+INSTANTIATE_TEST_SUITE_P(EX08, GrilleColonnesInvalidesTest, ::testing::Values(-1, 7, 100));
+
+// --- Itération 3 (TDD) : alignement de 4 jetons — horizontal (EX-14) ---------
+
+TEST(GrilleVictoireTest, quatre_jetons_alignes_horizontalement_forment_un_alignement) {
+    Grille grille;
+    for (int colonne = 0; colonne < 4; ++colonne) {
+        grille.jouer(colonne, Jeton::Rouge);
+    }
+
+    EXPECT_TRUE(grille.aligneQuatre(5, 3));
+}
+
+TEST(GrilleVictoireTest, trois_jetons_alignes_ne_suffisent_pas) {
+    Grille grille;
+    for (int colonne = 0; colonne < 3; ++colonne) {
+        grille.jouer(colonne, Jeton::Rouge);
+    }
+
+    EXPECT_FALSE(grille.aligneQuatre(5, 2));
+}
+
+TEST(GrilleVictoireTest, un_jeton_adverse_interrompt_l_alignement) {
+    Grille grille;
+    grille.jouer(0, Jeton::Rouge);
+    grille.jouer(1, Jeton::Rouge);
+    grille.jouer(2, Jeton::Jaune);
+    grille.jouer(3, Jeton::Rouge);
+    grille.jouer(4, Jeton::Rouge);
+
+    EXPECT_FALSE(grille.aligneQuatre(5, 4));
+}
+
+TEST(GrilleVictoireTest, l_alignement_est_detecte_quand_le_dernier_jeton_comble_un_trou) {
+    Grille grille;
+    grille.jouer(0, Jeton::Jaune);
+    grille.jouer(1, Jeton::Jaune);
+    grille.jouer(3, Jeton::Jaune);
+    grille.jouer(2, Jeton::Jaune);  // le dernier jeton est au milieu
+
+    EXPECT_TRUE(grille.aligneQuatre(5, 2));
+}
+
+TEST(GrilleVictoireTest, une_case_vide_n_est_jamais_alignee) {
+    const Grille grille;
+
+    EXPECT_FALSE(grille.aligneQuatre(5, 0));
 }
