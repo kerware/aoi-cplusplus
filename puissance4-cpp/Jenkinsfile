@@ -1,0 +1,54 @@
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+// ---------------------------------------------------------------------------
+// Pipeline Jenkins du projet Puissance 4 (pipeline déclaratif, versionné avec le code)
+//
+// POINT DE DÉPART du TP 5 : une seule étape (compilation + tests Linux). À compléter :
+//   - Qualité : couverture (recordCoverage) et analyse statique (recordIssues), avec seuils ;
+//   - Client Qt ; Tests système (ci/tests-systeme.sh) ; options charge k6 et Squash TM.
+// Toutes les étapes s'exécutent dans des conteneurs (Dockerfile, docker-compose.ci.yml) : Jenkins
+// n'a besoin que du client Docker. Convention : des tests en échec rendent le build INSTABLE (jaune) ;
+// une erreur de compilation ou d'infrastructure le met en ÉCHEC (rouge).
+// ---------------------------------------------------------------------------
+pipeline {
+    agent any
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 60, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        P4_COMMIT = "${env.GIT_COMMIT}"                  // EX-21 : identification du binaire
+        P4_BUILD = "${env.BUILD_NUMBER}"
+        COMPOSE_PROJECT_NAME = "p4-ci-${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Compilation et tests (Linux)') {
+            steps {
+                // Étape « resultats-tests » du Dockerfile : compile, exécute les tests unitaires et
+                // d'intégration, et exporte le rapport JUnit MÊME si des tests échouent.
+                sh '''docker build --target resultats-tests \
+                        --build-arg P4_COMMIT=$P4_COMMIT --build-arg P4_BUILD=$P4_BUILD \
+                        --output type=local,dest=resultats/linux .'''
+            }
+            post {
+                always {
+                    junit testResults: 'resultats/linux/*.xml'
+                }
+            }
+        }
+
+        // TP 5 : ajouter ici les étapes suivantes (voir l'énoncé).
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'resultats/**', allowEmptyArchive: true, fingerprint: true
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}

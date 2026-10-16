@@ -1,0 +1,43 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# ---------------------------------------------------------------------------
+# Intégration continue du projet Puissance 4 (GitHub Actions)
+#
+# POINT DE DÉPART du TP 5 : un seul job (Linux). À compléter : matrice Linux + Windows, qualité,
+# tests système, publication des résultats (voir l'énoncé).
+# ---------------------------------------------------------------------------
+name: CI Puissance 4
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  P4_COMMIT: ${{ github.sha }}        # EX-21 : gravés dans l'exécutable par CMake
+  P4_BUILD: ${{ github.run_number }}
+
+jobs:
+  linux:
+    name: Compilation et tests (Linux GCC)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Outils (Ninja)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build
+      - name: Configurer
+        run: cmake --preset linux-gcc
+      - name: Compiler
+        run: cmake --build --preset linux-gcc
+      - name: Tests unitaires et d'intégration
+        run: ctest --preset linux-gcc -LE systeme --output-junit "${{ github.workspace }}/resultats/ctest-linux-gcc.xml"
+      - name: Conserver les résultats
+        if: always()                  # même (surtout !) quand les tests échouent
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-linux-gcc
+          path: resultats/

@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:29:37
 #pragma once
 
 #include "application/ports/entree/ConsulterPartie.hpp"
@@ -6,6 +6,8 @@
 #include "application/ports/entree/JouerCoup.hpp"
 #include "application/ports/sortie/GenerateurIdentifiant.hpp"
 #include "application/ports/sortie/PartieRepository.hpp"
+
+#include <mutex>
 
 namespace p4::application {
 
@@ -22,6 +24,9 @@ public:
 private:
     PartieRepository& repository_;
     GenerateurIdentifiant& generateur_;
+    // « lire, jouer, sauvegarder » doit être atomique : sans verrou, deux coups
+    // simultanés sur la même partie lisent le même état et le second écrase le premier.
+    std::mutex verrouCoups_;
 };
 
 } // namespace p4::application

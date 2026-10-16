@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:23:27
 // Test unitaire du cas d'utilisation : les ports de sortie sont remplacés
 // par des bouchons GoogleMock. Aucun adaptateur réel n'est utilisé.
 #include "application/ServicePartie.hpp"

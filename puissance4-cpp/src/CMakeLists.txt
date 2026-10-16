@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 13:40:00
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:19
 # ---------------------------------------------------------------------------
 # Trois cibles = trois anneaux de l'hexagone
 #   p4_domaine     : modèle + ports + cas d'utilisation (AUCUNE dépendance externe)
@@ -26,6 +26,10 @@ target_link_libraries(p4_adaptateurs
 
 add_executable(puissance4_serveur main.cpp)
 target_link_libraries(puissance4_serveur PRIVATE p4_adaptateurs p4_options)
+
+# EX-21 : version, commit et numéro de build gravés dans l'exécutable
+configure_file(Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/genere/Version.hpp @ONLY)
+target_include_directories(puissance4_serveur PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/genere)
 
 # L'IHM HTML5 est copiée à côté de l'exécutable : <bin>/web/index.html
 add_custom_command(TARGET puissance4_serveur POST_BUILD

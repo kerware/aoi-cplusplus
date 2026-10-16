@@ -1,5 +1,6 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:48:21
-// IHM HTML5 de l'itération 4 : crée une partie, joue (EX-12), annonce la fin (EX-15) et l'état final (EX-18).
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:30
+// IHM HTML5 de l'itération 5 : crée une partie, joue (EX-12), annonce la fin (EX-15), l'état final (EX-18)
+// et affiche la version du serveur (EX-21).
 "use strict";
 
 const formulaire = document.getElementById("formulaire-partie");
@@ -64,7 +65,10 @@ function afficherPartie(partie) {
   const finPartie = document.getElementById("fin-partie");
   finPartie.hidden = enCours;
   if (!enCours) {
-    finPartie.textContent = "Partie terminée — victoire de " + partie.vainqueur;
+    // EX-18 : le match nul n'a pas de vainqueur
+    finPartie.textContent = partie.statut === "NULLE"
+      ? "Partie terminée — match nul"
+      : "Partie terminée — victoire de " + partie.vainqueur;
   }
   document.getElementById("id-partie").textContent = partie.id;
   document.getElementById("joueur-courant").textContent = partie.joueurCourant;
@@ -108,3 +112,12 @@ formulaire.addEventListener("submit", async (evenement) => {
     afficherMessage("Serveur injoignable : " + erreur.message, true);
   }
 });
+
+// EX-21 : version, commit et build du serveur, affichés en pied de page
+fetch("/api/sante")
+  .then((reponse) => reponse.json())
+  .then((sante) => {
+    document.getElementById("version").textContent =
+      "· v" + sante.version + " (commit " + sante.commit.substring(0, 7) + ", build " + sante.build + ")";
+  })
+  .catch(() => {});

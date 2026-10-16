@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:58:00
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:19
 // ---------------------------------------------------------------------------
 // Tests SYSTÈME de l'API : ils s'exécutent contre un serveur DÉJÀ DÉPLOYÉ
 // (exécutable Windows, conteneur Docker, serveur de recette…), désigné par P4_URL.
@@ -15,9 +15,12 @@
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 
+#include <atomic>
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <thread>
+#include <vector>
 
 using nlohmann::json;
 
@@ -63,6 +66,8 @@ TEST_F(ApiSystemeTest, le_point_de_sante_indique_la_version) {
 
     EXPECT_EQ(sante["statut"], "OK");
     EXPECT_TRUE(sante.contains("version"));
+    EXPECT_TRUE(sante.contains("commit"));  // EX-21 : traçabilité du binaire déployé
+    EXPECT_TRUE(sante.contains("build"));
 }
 
 TEST_F(ApiSystemeTest, parcours_complet_jusqu_a_une_victoire_verticale) {
@@ -102,4 +107,50 @@ TEST_F(ApiSystemeTest, deux_parties_simultanees_sont_independantes) {
 
     EXPECT_EQ(json::parse(client->Get("/api/parties/" + a)->body)["nombreDeCoups"], 1);
     EXPECT_EQ(json::parse(client->Get("/api/parties/" + b)->body)["nombreDeCoups"], 0);
+}
+
+// EX-09 en test système : 7e coup dans une colonne pleine -> 409, partie inchangée
+TEST_F(ApiSystemeTest, une_colonne_pleine_repond_409_et_ne_change_rien) {
+    const std::string id = nouvellePartie();
+    for (int i = 0; i < 6; ++i) {
+        ASSERT_EQ(jouer(id, 0)->status, 200);
+    }
+
+    const auto reponse = jouer(id, 0);
+
+    ASSERT_TRUE(reponse);
+    EXPECT_EQ(reponse->status, 409);
+    const json partie = json::parse(client->Get("/api/parties/" + id)->body);
+    EXPECT_EQ(partie["nombreDeCoups"], 6);
+    EXPECT_EQ(partie["joueurCourant"], "Alice");
+}
+
+// EX-19 : des coups envoyés simultanément sur une même partie sont tous pris en compte.
+// Invariant vérifiable de l'extérieur : nombre de réponses 200 == nombreDeCoups enregistré.
+TEST_F(ApiSystemeTest, des_coups_simultanes_sur_une_meme_partie_ne_sont_jamais_perdus) {
+    const char* url = std::getenv("P4_URL");
+    for (int essai = 0; essai < 10; ++essai) {
+        const std::string id = nouvellePartie();
+        std::atomic<int> acceptes{0};
+        std::vector<std::thread> joueurs;
+        for (int colonne = 0; colonne < 7; ++colonne) {
+            joueurs.emplace_back([&, colonne] {
+                httplib::Client clientDuThread(url);  // un client HTTP par thread
+                for (int i = 0; i < 6; ++i) {
+                    const auto r = clientDuThread.Post("/api/parties/" + id + "/coups",
+                                                       json{{"colonne", colonne}}.dump(), TYPE_JSON);
+                    if (r && r->status == 200) {
+                        ++acceptes;
+                    }
+                }
+            });
+        }
+        for (auto& joueur : joueurs) {
+            joueur.join();
+        }
+
+        const json partie = json::parse(client->Get("/api/parties/" + id)->body);
+        ASSERT_EQ(partie["nombreDeCoups"].get<int>(), acceptes.load())
+            << "essai " << essai << " : des coups acceptés (200) ont été perdus";
+    }
 }

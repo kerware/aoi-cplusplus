@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:59:44
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:47
 import { expect, test } from "@playwright/test";
 import { PagePuissance4 } from "../pages/PagePuissance4";
 
@@ -23,5 +23,12 @@ test.describe("Créer une partie (EX-01, EX-02)", () => {
 
     await expect(p4.message).toHaveText("Le nom du joueur est obligatoire");
     await expect(p4.message).toHaveClass(/erreur/);
+  });
+
+  test("le pied de page affiche la version du serveur (EX-21)", async ({ page }) => {
+    const p4 = new PagePuissance4(page);
+    await p4.ouvrir();
+
+    await expect(page.getByTestId("version")).toHaveText(/^· v\d+\.\d+\.\d+ \(commit \S+, build \d+\)$/);
   });
 });

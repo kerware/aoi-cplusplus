@@ -1,0 +1,8 @@
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:19
+// Modèle : CMake génère <build>/src/genere/Version.hpp à la configuration (configure_file).
+// EX-21 : la CI renseigne P4_COMMIT et P4_BUILD (variables d'environnement ou -D...).
+#pragma once
+
+#define P4_VERSION "@PROJECT_VERSION@"
+#define P4_COMMIT "@P4_COMMIT@"
+#define P4_BUILD "@P4_BUILD@"

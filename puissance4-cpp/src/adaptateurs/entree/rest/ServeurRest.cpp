@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:48:21
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:30:35
 #include "adaptateurs/entree/rest/ServeurRest.hpp"
 
 #include "adaptateurs/entree/rest/PartieJson.hpp"
@@ -29,11 +29,13 @@ void repondreErreur(httplib::Response& reponse, int statut, const std::string& m
 ServeurRest::ServeurRest(application::CreerPartie& creerPartie,
                          application::ConsulterPartie& consulterPartie,
                          application::JouerCoup& jouerCoup,
-                         std::string dossierWeb)
+                         std::string dossierWeb,
+                         InformationsVersion version)
     : creerPartie_(creerPartie),
       consulterPartie_(consulterPartie),
       jouerCoup_(jouerCoup),
       dossierWeb_(std::move(dossierWeb)),
+      version_(std::move(version)),
       serveur_(std::make_unique<httplib::Server>()) {
     declarerRoutes();
 }
@@ -41,10 +43,17 @@ ServeurRest::ServeurRest(application::CreerPartie& creerPartie,
 ServeurRest::~ServeurRest() = default;
 
 void ServeurRest::declarerRoutes() {
+    // Sans TCP_NODELAY, l'algorithme de Nagle et l'ACK retardé du client ajoutent
+    // ~40 ms à chaque petite réponse (médiane mesurée par k6 : 43 ms au lieu de quelques ms).
+    serveur_->set_tcp_nodelay(true);
     serveur_->set_default_headers({{"Access-Control-Allow-Origin", "*"}});
 
-    serveur_->Get("/api/sante", [](const httplib::Request&, httplib::Response& reponse) {
-        reponse.set_content(nlohmann::json{{"statut", "OK"}, {"version", "1.3.0-iteration4"}}.dump(),
+    // EX-21 : le point de santé identifie le binaire (version, commit, build de la CI)
+    serveur_->Get("/api/sante", [this](const httplib::Request&, httplib::Response& reponse) {
+        reponse.set_content(nlohmann::json{{"statut", "OK"},
+                                           {"version", version_.version},
+                                           {"commit", version_.commit},
+                                           {"build", version_.build}}.dump(),
                             TYPE_JSON);
     });
 
@@ -113,6 +122,10 @@ void ServeurRest::declarerRoutes() {
     if (!dossierWeb_.empty()) {
         serveur_->set_mount_point("/", dossierWeb_);
     }
+}
+
+void ServeurRest::definirNombreDeThreads(std::size_t nombre) {
+    serveur_->new_task_queue = [nombre] { return new httplib::ThreadPool(nombre); };
 }
 
 int ServeurRest::lier(const std::string& hote, int port) {

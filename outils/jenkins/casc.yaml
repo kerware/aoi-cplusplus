@@ -1,0 +1,51 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# ---------------------------------------------------------------------------
+# Configuration de Jenkins « as code » (plugin Configuration as Code) : rejouée à chaque démarrage.
+# Modifier ce fichier puis « docker compose up -d --build » plutôt que cliquer dans l'administration.
+# ---------------------------------------------------------------------------
+jenkins:
+  systemMessage: "Jenkins de la formation AOI : poste de formation uniquement (mot de passe de démonstration)."
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          name: Formateur AOI
+          password: ${JENKINS_ADMIN_PASSWORD}
+  # Lecture sans connexion (consulter les builds) ; toute action demande d'être connecté.
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: true
+
+unclassified:
+  location:
+    url: http://localhost:8088/
+  timestamper:
+    allPipelines: true
+
+# Le job est décrit en code (Job DSL) : il lit le Jenkinsfile À LA RACINE du dépôt du participant.
+jobs:
+  - script: |
+      pipelineJob('puissance4') {
+        description('Pipeline du projet fil rouge Puissance 4 : défini par le Jenkinsfile du dépôt.')
+        properties {
+          pipelineTriggers {
+            triggers {
+              pollSCM { scmpoll_spec('H/2 * * * *') }   // interroge Git toutes les 2 minutes
+            }
+          }
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('file:///depots/puissance4') }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(false)
+          }
+        }
+      }

@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:49:56
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:06:04
 # ---------------------------------------------------------------------------
 # Environnement de test système (Linux) : le serveur et les outils de test
 # partagent le même réseau Docker (pas de NAT entre l'injecteur et le serveur).
@@ -12,12 +12,12 @@
 #   docker compose run --rm charge-gatling       # Gatling, même scénario (rapport : tests/systeme/charge-gatling/target/gatling)
 #   docker compose down                          # arrêt propre
 # ---------------------------------------------------------------------------
-name: puissance4-it4
+name: puissance4-it5
 
 services:
   serveur:
     build: { context: ., target: execution }
-    image: puissance4:iteration4
+    image: puissance4:iteration5
     ports: ["8080:8080"]
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]

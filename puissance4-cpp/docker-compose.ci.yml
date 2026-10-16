@@ -1,0 +1,53 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:38:04
+# ---------------------------------------------------------------------------
+# Environnement de test système pour l'INTÉGRATION CONTINUE (GitHub Actions, Jenkins)
+#
+# Différences avec docker-compose.yml (poste du développeur) :
+#   - aucun dossier monté : les injecteurs sont des images construites (Dockerfile, étapes tests-*),
+#     ce qui fonctionne aussi depuis un Jenkins lui-même en conteneur ;
+#   - aucun port publié sur l'hôte : plusieurs builds peuvent tourner en même temps
+#     (un nom de projet Compose par build : -p p4-ci-<numéro>) ;
+#   - les résultats sont récupérés par « docker cp » (voir ci/tests-systeme.sh).
+#
+#   sh ci/tests-systeme.sh resultats/systeme     # tout enchaîner (recommandé)
+# ---------------------------------------------------------------------------
+# Mêmes arguments partout : l'étape « compilation » du Dockerfile n'est construite qu'une fois.
+x-identification: &identification
+  P4_COMMIT: ${P4_COMMIT:-local}
+  P4_BUILD: ${P4_BUILD:-0}
+
+services:
+  serveur:
+    build:
+      context: .
+      target: execution
+      args: *identification
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  tests-cpp:
+    build: { context: ., target: compilation, args: *identification }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    command: sh -c "mkdir -p /resultats && ctest --preset linux-gcc -L systeme --output-junit /resultats/ctest-systeme.xml"
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-api:
+    build: { context: ., target: tests-api }
+    profiles: [tests]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-ihm:
+    build: { context: ., target: tests-ihm }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    depends_on: { serveur: { condition: service_healthy } }
+
+  charge:
+    build: { context: ., target: charge }
+    profiles: [charge]
+    environment: { P4_URL: "http://serveur:8080" }
+    depends_on: { serveur: { condition: service_healthy } }

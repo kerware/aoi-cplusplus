@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:19
 // Test d'intégration : le VRAI serveur HTTP est démarré sur un port libre,
 // branché sur le vrai service et le vrai repository en mémoire.
 // Un client HTTP (cpp-httplib) l'interroge comme le ferait l'IHM.
@@ -45,7 +45,7 @@ protected:
     adaptateurs::PartieRepositoryEnMemoire repository;
     adaptateurs::GenerateurIdentifiantSequentiel generateur;
     application::ServicePartie service{repository, generateur};
-    adaptateurs::ServeurRest serveur{service, service, service, P4_DOSSIER_WEB};
+    adaptateurs::ServeurRest serveur{service, service, service, P4_DOSSIER_WEB, {"9.9.9", "abc1234", "42"}};
     std::thread ecoute;
     int port = 0;
     std::unique_ptr<httplib::Client> client;
@@ -59,6 +59,15 @@ TEST_F(ServeurRestTest, le_point_de_sante_repond_ok) {
     ASSERT_TRUE(reponse);
     EXPECT_EQ(reponse->status, 200);
     EXPECT_EQ(json::parse(reponse->body)["statut"], "OK");
+}
+
+// EX-21 : le point de santé identifie le binaire déployé
+TEST_F(ServeurRestTest, le_point_de_sante_indique_version_commit_et_build) {
+    const json sante = json::parse(client->Get("/api/sante")->body);
+
+    EXPECT_EQ(sante["version"], "9.9.9");
+    EXPECT_EQ(sante["commit"], "abc1234");
+    EXPECT_EQ(sante["build"], "42");
 }
 
 TEST_F(ServeurRestTest, post_parties_cree_une_partie_et_repond_201) {

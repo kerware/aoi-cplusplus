@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 18:09:25
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:23:27
 // Test de charge Gatling (Java DSL) — exigence EX-13 :
 //   un coup est traité en moins de 50 ms pour 95 % des requêtes, avec 50 parties jouées simultanément.
 // Même scénario que le script k6 : chaque utilisateur virtuel crée une partie et la joue jusqu'à la victoire.

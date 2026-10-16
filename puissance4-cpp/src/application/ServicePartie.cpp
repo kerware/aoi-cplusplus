@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:29:37
 #include "application/ServicePartie.hpp"
 
 #include "application/Erreurs.hpp"
@@ -22,6 +22,7 @@ std::optional<domaine::Partie> ServicePartie::consulter(const domaine::IdPartie&
 }
 
 domaine::Partie ServicePartie::jouer(const domaine::IdPartie& id, int colonne) {
+    const std::lock_guard verrou(verrouCoups_);  // EX-19
     std::optional<domaine::Partie> partie = repository_.trouverParId(id);
     if (!partie) {
         throw PartieInconnue(id);

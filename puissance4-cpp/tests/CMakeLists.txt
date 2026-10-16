@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:52:05
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:23:27
 # ---------------------------------------------------------------------------
 # Trois exécutables de test, trois niveaux de la pyramide :
 #   tests_unitaires   : domaine + application, ports de sortie bouchonnés (GoogleMock)

@@ -1,0 +1,6 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# Fins de ligne LF dans le dépôt : scripts et fichiers lus sous Linux (Docker, Jenkins, GitHub Actions)
+* text=auto eol=lf
+*.png binary
+*.xls binary
+*.docx binary

@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:45:07
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:29:37
 // Test d'IHM SYSTÈME QtTest : pilote la vraie fenêtre (saisie, clics) contre le serveur
 // désigné par P4_URL. Sans P4_URL, le programme renvoie 77 : CTest le marque « ignoré ».
 //   Windows : $env:P4_URL = "http://127.0.0.1:8080"; ctest --preset windows-mingw-qt -L qt-systeme
@@ -53,6 +53,24 @@ private slots:
         if (const QString dossier = qEnvironmentVariable("P4_CAPTURE"); !dossier.isEmpty()) {
             fenetre.grab().save(QDir(dossier).filePath("client-qt-victoire.png"));
         }
+    }
+
+    // Une colonne pleine ne peut plus être choisie (EX-12, EX-20)
+    void une_colonne_pleine_desactive_son_bouton() {
+        ClientApi client{QUrl(qEnvironmentVariable("P4_URL"))};
+        FenetrePrincipale fenetre(client);
+        fenetre.show();
+        QSignalSpy partieRecue(&client, &ClientApi::partieRecue);
+        QTest::mouseClick(fenetre.findChild<QPushButton*>("nouvellePartie"), Qt::LeftButton);
+        QVERIFY(partieRecue.wait(5000));
+
+        for (int i = 0; i < 6; ++i) {
+            jouer(fenetre, 0);
+        }
+
+        QVERIFY(!fenetre.findChild<QPushButton*>("colonne-0")->isEnabled());
+        QVERIFY(fenetre.findChild<QPushButton*>("colonne-1")->isEnabled());
+        QCOMPARE(fenetre.findChild<QLabel*>("etat")->text(), QStringLiteral("Au tour de Alice"));
     }
 
     void une_erreur_du_serveur_est_affichee() {

@@ -1,4 +1,4 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:23:27
 #include "adaptateurs/entree/rest/PartieJson.hpp"
 
 #include <string>

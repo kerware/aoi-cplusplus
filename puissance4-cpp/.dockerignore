@@ -1,17 +1,17 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:32:44
+# Contexte de « docker build » : sources seulement (ni produits de compilation, ni résultats)
 build/
 .git/
+.github/
 .vs/
 .vscode/
 .idea/
 *.user
 rapports/
+resultats/
 tests/systeme/node_modules/
 tests/systeme/resultats/
 tests/systeme/test-results/
-qt-client/build/
-tests/systeme/api/
-tests/systeme/ihm/
-tests/systeme/charge/
-tests/systeme/*.json
-tests/systeme/*.ts
 tests/systeme/charge-gatling/
+qt-client/build/
+ci/

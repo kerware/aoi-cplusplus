@@ -1,3 +1,4 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:06:04
 build/
 .vs/
 .vscode/
@@ -9,3 +10,6 @@ tests/systeme/node_modules/
 tests/systeme/resultats/
 tests/systeme/test-results/
 tests/systeme/charge-gatling/target/
+# Résultats et rapports produits par la CI (Jenkins, GitHub Actions, scripts ci/)
+resultats/
+squash-resultats.json

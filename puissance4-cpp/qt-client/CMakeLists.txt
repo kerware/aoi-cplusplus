@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 09/10/2026 17:45:07
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:23:27
 # ---------------------------------------------------------------------------
 # Client bureau Qt du Puissance 4 (EX-20) — projet CMake séparé du serveur :
 # il n'utilise que l'API REST, comme l'IHM web. Tests : QtTest.

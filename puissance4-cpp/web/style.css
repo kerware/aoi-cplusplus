@@ -1,4 +1,4 @@
-/* Dernière génération/modification faite par l'IA Claude le 09/10/2026 15:10:00 */
+/* Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:30 */
 :root {
   --bleu: #2f5897;
   --bleu-fonce: #1e3d6e;
@@ -50,3 +50,4 @@ button:hover { background: var(--bleu-fonce); }
 .case.R { background: var(--rouge); }
 .case.J { background: var(--jaune); }
 footer { text-align: center; color: #7a8594; font-size: 13px; margin: 32px 0 16px; }
+#version { white-space: nowrap; }

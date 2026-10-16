@@ -1,0 +1,32 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# ---------------------------------------------------------------------------
+# Jenkins LTS pour la formation AOI (chapitre 5) — http://localhost:8088
+#
+#   1. Indiquer le dépôt Git du projet (chemin ABSOLU, avec des / ) dans le fichier .env :
+#        P4_DEPOT=C:/Users/moi/formation/puissance4-cpp
+#   2. docker compose up -d --build          (première fois : quelques minutes, plugins)
+#   3. http://localhost:8088 : le job « puissance4 » existe déjà ; il interroge le dépôt toutes les
+#      2 minutes et se lance à chaque nouveau commit sur main. Compte : admin (mot de passe ci-dessous).
+#   Arrêter : docker compose stop         (arrêt propre, historique des builds conservé)
+#
+# Jenkins pilote le Docker de l'hôte (socket monté) : il peut lancer des conteneurs.
+# Réservé à un poste de formation ; port publié sur 127.0.0.1 seulement.
+# ---------------------------------------------------------------------------
+name: formation-aoi-jenkins
+
+services:
+  jenkins:
+    build: .
+    image: formation-aoi/jenkins:2.580.1
+    ports: ["127.0.0.1:8088:8080"]
+    environment:
+      JENKINS_ADMIN_PASSWORD: jenkins-formation        # mot de passe de DÉMONSTRATION
+    group_add: ["0"]                                   # accès au socket Docker de Docker Desktop
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${P4_DEPOT:-../../puissance4-cpp}:/depots/puissance4:ro
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:

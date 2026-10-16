@@ -1,15 +1,16 @@
-// Dernière génération/modification faite par l'IA Claude le 09/10/2026 16:47:56
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:31:19
 // ---------------------------------------------------------------------------
 // Point d'entrée = "composition root" de l'architecture hexagonale :
 // c'est le SEUL endroit qui connaît à la fois le domaine et les adaptateurs.
 //
-// Usage : puissance4_serveur [--port 8080] [--hote 0.0.0.0] [--web <dossier>]
+// Usage : puissance4_serveur [--port 8080] [--hote 0.0.0.0] [--web <dossier>] [--threads 64]
 // Arrêt propre : taper "q" puis Entrée dans la console.
 // ---------------------------------------------------------------------------
 #include "adaptateurs/entree/rest/ServeurRest.hpp"
 #include "adaptateurs/sortie/memoire/GenerateurIdentifiantSequentiel.hpp"
 #include "adaptateurs/sortie/memoire/PartieRepositoryEnMemoire.hpp"
 #include "application/ServicePartie.hpp"
+#include "Version.hpp"  // généré par CMake (src/Version.hpp.in)
 
 #include <filesystem>
 #include <iostream>
@@ -21,6 +22,7 @@ namespace {
 struct Configuration {
     std::string hote = "0.0.0.0";
     int port = 8080;
+    int threads = 64;  // ≥ nombre de clients simultanés attendus (EX-13 : 50)
     std::string dossierWeb;
 };
 
@@ -34,6 +36,8 @@ Configuration lireConfiguration(int argc, char* argv[]) {
         const std::string valeur = argv[i + 1];
         if (option == "--port") {
             configuration.port = std::stoi(valeur);
+        } else if (option == "--threads") {
+            configuration.threads = std::stoi(valeur);
         } else if (option == "--hote") {
             configuration.hote = valeur;
         } else if (option == "--web") {
@@ -61,17 +65,20 @@ int main(int argc, char* argv[]) {
     p4::application::ServicePartie service(repository, generateur);
 
     // 3. Adaptateur d'entrée, branché sur les ports d'entrée
-    p4::adaptateurs::ServeurRest serveur(service, service, service, configuration.dossierWeb);
+    p4::adaptateurs::ServeurRest serveur(service, service, service, configuration.dossierWeb,
+                                         {P4_VERSION, P4_COMMIT, P4_BUILD});
 
+    serveur.definirNombreDeThreads(static_cast<std::size_t>(configuration.threads));
     const int port = serveur.lier(configuration.hote, configuration.port);
     if (port < 0) {
         std::cerr << "Impossible d'écouter sur " << configuration.hote << ":" << configuration.port
                   << "\n";
         return 1;
     }
-    std::cout << "Puissance 4 - serveur REST demarre sur http://localhost:" << port << "\n"
+    std::cout << "Puissance 4 " << P4_VERSION << " (commit " << P4_COMMIT << ", build " << P4_BUILD << ")\n"
+              << "Serveur REST demarre sur http://localhost:" << port << "\n"
               << "Tapez q puis Entree pour arreter.\n"
-              << std::flush;  // : flush explicite, une seule fois
+              << std::flush;  // flush explicite, une seule fois
 
     // Arrêt propre sur "q" ; si l'entrée standard est fermée (Docker détaché),
     // le thread se termine et le serveur continue de tourner.

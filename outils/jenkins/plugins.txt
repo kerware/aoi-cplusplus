@@ -1,0 +1,16 @@
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# Plugins Jenkins de la formation AOI (un par ligne : identifiant[:version])
+# --- Socle
+configuration-as-code
+job-dsl
+workflow-aggregator
+pipeline-graph-view
+git
+credentials-binding
+timestamper
+ws-cleanup
+# --- Reporting des résultats
+junit
+coverage
+warnings-ng
+htmlpublisher
