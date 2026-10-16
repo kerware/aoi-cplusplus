@@ -1,13 +1,15 @@
-// Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+// Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:09:08
 // ---------------------------------------------------------------------------
 // Pipeline Jenkins du projet Puissance 4 (pipeline déclaratif, versionné avec le code)
 //
-// POINT DE DÉPART du TP 5 : une seule étape (compilation + tests Linux). À compléter :
-//   - Qualité : couverture (recordCoverage) et analyse statique (recordIssues), avec seuils ;
-//   - Client Qt ; Tests système (ci/tests-systeme.sh) ; options charge k6 et Squash TM.
+//   Compilation et tests Linux ─┬─ Qualité (couverture, cppcheck, clang-tidy) ─┐
+//                               ├─ Client Qt (QtTest)                          ├─ Charge k6 (option) ─ Squash TM (option)
+//                               └─ Tests système (API, IHM)                    ┘
+//
 // Toutes les étapes s'exécutent dans des conteneurs (Dockerfile, docker-compose.ci.yml) : Jenkins
-// n'a besoin que du client Docker. Convention : des tests en échec rendent le build INSTABLE (jaune) ;
-// une erreur de compilation ou d'infrastructure le met en ÉCHEC (rouge).
+// n'a besoin que du client Docker. Les mêmes commandes servent à GitHub Actions (.github/workflows).
+// Convention : des tests en échec rendent le build INSTABLE (jaune) ; une erreur de compilation ou
+// d'infrastructure le met en ÉCHEC (rouge).
 // ---------------------------------------------------------------------------
 pipeline {
     agent any
@@ -16,6 +18,14 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timeout(time: 60, unit: 'MINUTES')
         disableConcurrentBuilds()
+    }
+
+    parameters {
+        booleanParam(name: 'CHARGE', defaultValue: false, description: 'Lancer aussi le test de charge k6 (EX-13, ~1 min)')
+        string(name: 'SQUASH_TM_ITERATION_ID', defaultValue: '',
+               description: "Identifiant de l'itération Squash TM où publier les résultats (vide = pas de publication)")
+        string(name: 'SQUASH_TM_URL', defaultValue: 'http://host.docker.internal:8090/squash',
+               description: 'Adresse de Squash TM vue depuis le conteneur Jenkins')
     }
 
     environment {
@@ -27,8 +37,6 @@ pipeline {
     stages {
         stage('Compilation et tests (Linux)') {
             steps {
-                // Étape « resultats-tests » du Dockerfile : compile, exécute les tests unitaires et
-                // d'intégration, et exporte le rapport JUnit MÊME si des tests échouent.
                 sh '''docker build --target resultats-tests \
                         --build-arg P4_COMMIT=$P4_COMMIT --build-arg P4_BUILD=$P4_BUILD \
                         --output type=local,dest=resultats/linux .'''
@@ -36,16 +44,93 @@ pipeline {
             post {
                 always {
                     junit testResults: 'resultats/linux/*.xml'
+                    script {
+                        // Les tests système n'ont de sens que si les tests unitaires passent
+                        env.TESTS_UNITAIRES_OK = (readFile('resultats/linux/ctest-code.txt').trim() == '0').toString()
+                    }
                 }
             }
         }
 
-        // TP 5 : ajouter ici les étapes suivantes (voir l'énoncé).
+        stage('Vérifications') {
+            parallel {
+                stage('Qualité') {
+                    steps {
+                        sh 'docker build --target rapports --output type=local,dest=rapports .'
+                    }
+                    post {
+                        always {
+                            recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'rapports/couverture-cobertura.xml']],
+                                           sourceDirectories: [[path: '.']],
+                                           qualityGates: [[metric: 'LINE', baseline: 'PROJECT', threshold: 90.0,
+                                                           criticality: 'UNSTABLE']])
+                            recordIssues(tools: [cppCheck(pattern: 'rapports/cppcheck.xml'),
+                                                 clangTidy(pattern: 'rapports/clang-tidy.txt')],
+                                         qualityGates: [[threshold: 1, type: 'TOTAL', criticality: 'UNSTABLE']])
+                            publishHTML(target: [reportName: 'Couverture (gcovr)', reportDir: 'rapports/couverture',
+                                                 reportFiles: 'index.html', keepAll: true, allowMissing: true,
+                                                 alwaysLinkToLastBuild: true])
+                        }
+                    }
+                }
+                stage('Client Qt') {
+                    steps {
+                        sh 'docker build --target qt .'
+                    }
+                }
+                stage('Tests système') {
+                    when { environment name: 'TESTS_UNITAIRES_OK', value: 'true' }
+                    steps {
+                        script {
+                            if (sh(script: 'sh ci/tests-systeme.sh resultats/systeme', returnStatus: true) != 0) {
+                                unstable('Des tests système échouent')
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            junit testResults: 'resultats/systeme/*.xml', allowEmptyResults: true
+                            publishHTML(target: [reportName: 'IHM (Playwright)', reportDir: 'resultats/systeme/playwright-rapport',
+                                                 reportFiles: 'index.html', keepAll: true, allowMissing: true,
+                                                 alwaysLinkToLastBuild: true])
+                            publishHTML(target: [reportName: 'Robot Framework', reportDir: 'resultats/systeme',
+                                                 reportFiles: 'report.html, log.html', keepAll: true,
+                                                 allowMissing: true, alwaysLinkToLastBuild: true])
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Charge (k6)') {
+            when { expression { params.CHARGE && env.TESTS_UNITAIRES_OK == 'true' } }
+            steps {
+                script {
+                    if (sh(script: 'sh ci/tests-systeme.sh resultats/charge charge', returnStatus: true) != 0) {
+                        unstable('EX-13 non tenue : seuils k6 dépassés')
+                    }
+                }
+            }
+        }
+
+        stage('Publication Squash TM') {
+            when { expression { params.SQUASH_TM_ITERATION_ID?.trim() } }
+            environment {
+                SQUASH_TM_URL = "${params.SQUASH_TM_URL}"
+                SQUASH_TM_ITERATION_ID = "${params.SQUASH_TM_ITERATION_ID}"
+            }
+            steps {
+                // Jeton API Squash TM : identifiant Jenkins « squash-tm-jeton » (type « Secret text »)
+                withCredentials([string(credentialsId: 'squash-tm-jeton', variable: 'SQUASH_TM_API_TOKEN')]) {
+                    sh 'python3 ci/publier_squash.py "resultats/**/*.xml" --grouper "/" --sortie resultats/squash-resultats.json'
+                }
+            }
+        }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'resultats/**', allowEmptyArchive: true, fingerprint: true
+            archiveArtifacts artifacts: 'resultats/**, rapports/**', allowEmptyArchive: true, fingerprint: true
         }
         cleanup {
             cleanWs()

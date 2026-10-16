@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:38:04
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:09:08
 # ---------------------------------------------------------------------------
 # Environnement de test système pour l'INTÉGRATION CONTINUE (GitHub Actions, Jenkins)
 #
@@ -42,6 +42,12 @@ services:
 
   tests-ihm:
     build: { context: ., target: tests-ihm }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-robot:
+    build: { context: ., target: tests-robot }
     profiles: [tests]
     environment: { P4_URL: "http://serveur:8080" }
     depends_on: { serveur: { condition: service_healthy } }

@@ -1,11 +1,11 @@
 #!/bin/sh
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:50:00
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:09:08
 # ---------------------------------------------------------------------------
 # Tests système en CI : déploie le serveur (Docker Compose), lance les injecteurs,
 # rapatrie leurs résultats (JUnit, rapport Playwright, journal du serveur), nettoie TOUJOURS.
 #
 #   sh ci/tests-systeme.sh [dossier_resultats] [injecteurs...]
-#   sh ci/tests-systeme.sh resultats/systeme                       # tests-cpp tests-api tests-ihm
+#   sh ci/tests-systeme.sh resultats/systeme                       # tests-cpp tests-api tests-ihm tests-robot
 #   sh ci/tests-systeme.sh resultats/charge charge                 # test de charge k6 (EX-13)
 #
 # Variables : COMPOSE_PROJECT_NAME (un nom par build, défaut p4-ci), P4_COMMIT, P4_BUILD (EX-21).
@@ -14,7 +14,7 @@
 set -u
 RESULTATS=${1:-resultats/systeme}
 [ $# -gt 0 ] && shift
-INJECTEURS=${*:-tests-cpp tests-api tests-ihm}
+INJECTEURS=${*:-tests-cpp tests-api tests-ihm tests-robot}
 PROJET=${COMPOSE_PROJECT_NAME:-p4-ci}
 DC="docker compose -f docker-compose.ci.yml -p $PROJET --profile tests --profile charge"
 

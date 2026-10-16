@@ -1,9 +1,14 @@
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:27:13
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:47:53
 # ---------------------------------------------------------------------------
 # Intégration continue du projet Puissance 4 (GitHub Actions)
 #
-# POINT DE DÉPART du TP 5 : un seul job (Linux). À compléter : matrice Linux + Windows, qualité,
-# tests système, publication des résultats (voir l'énoncé).
+#   push / pull request  : compilation + tests Linux (GCC) et Windows (MSVC), qualité, tests système
+#   chaque nuit / manuel : en plus, test de charge k6 (EX-13)
+#
+# Chaque job produit des rapports (JUnit, couverture, analyse statique) conservés comme ARTEFACTS ;
+# le job « rapport » les publie dans l'onglet « Checks » et dans le résumé de l'exécution.
+# Publication facultative dans Squash TM : variables du dépôt SQUASH_TM_URL, SQUASH_TM_ITERATION_ID
+# et secret SQUASH_TM_API_TOKEN (Settings > Secrets and variables > Actions).
 # ---------------------------------------------------------------------------
 name: CI Puissance 4
 
@@ -12,32 +17,143 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1-5"          # 2 h UTC, du lundi au vendredi : build de nuit
 
 permissions:
   contents: read
+
+# Un nouveau push sur la même branche annule l'exécution précédente, devenue inutile
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   P4_COMMIT: ${{ github.sha }}        # EX-21 : gravés dans l'exécutable par CMake
   P4_BUILD: ${{ github.run_number }}
 
 jobs:
-  linux:
-    name: Compilation et tests (Linux GCC)
-    runs-on: ubuntu-24.04
+  # --- 1. Compilation et tests unitaires / intégration, sur les deux plates-formes ------
+  compilation:
+    name: Compilation et tests (${{ matrix.nom }})
+    strategy:
+      fail-fast: false                # un échec Windows ne masque pas le résultat Linux
+      matrix:
+        include:
+          - nom: Linux GCC
+            os: ubuntu-24.04
+            preset: linux-gcc
+          - nom: Windows MSVC
+            os: windows-2022
+            preset: windows-msvc
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - name: Outils (Ninja)
+      - name: Outils Linux (Ninja)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build
       - name: Configurer
-        run: cmake --preset linux-gcc
+        run: cmake --preset ${{ matrix.preset }}
       - name: Compiler
-        run: cmake --build --preset linux-gcc
+        run: cmake --build --preset ${{ matrix.preset }}
       - name: Tests unitaires et d'intégration
-        run: ctest --preset linux-gcc -LE systeme --output-junit "${{ github.workspace }}/resultats/ctest-linux-gcc.xml"
+        run: ctest --preset ${{ matrix.preset }} -LE systeme --output-junit "${{ github.workspace }}/resultats/ctest-${{ matrix.preset }}.xml"
       - name: Conserver les résultats
         if: always()                  # même (surtout !) quand les tests échouent
         uses: actions/upload-artifact@v7
         with:
-          name: tests-linux-gcc
+          name: tests-${{ matrix.preset }}
           path: resultats/
+          retention-days: 14
+
+  # --- 2. Qualité : couverture et analyse statique, avec seuil -------------------------
+  qualite:
+    name: Qualité (couverture, cppcheck, clang-tidy)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Rapports (étape Docker « rapports »)
+        run: docker build --target rapports --output type=local,dest=rapports .
+      - name: Seuil de qualité (lignes ≥ 90 %, aucune remarque d'analyse statique)
+        run: python3 ci/seuil_qualite.py rapports --lignes 90 --remarques 0
+      - name: Conserver les rapports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapports-qualite
+          path: rapports/
+
+  # --- 3. Client Qt (Linux) : compilation et tests unitaires QtTest -------------------
+  client-qt:
+    name: Client Qt (QtTest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compiler et tester le client Qt (étape Docker « qt »)
+        run: docker build --target qt .
+
+  # --- 4. Tests système : le serveur est déployé, les injecteurs le testent ------------
+  tests-systeme:
+    name: Tests système (API, IHM)
+    needs: compilation                # inutile de déployer un binaire dont les tests unitaires échouent
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: GoogleTest système, Bruno, Playwright (Docker Compose)
+        run: sh ci/tests-systeme.sh resultats/systeme
+      - name: Conserver les résultats
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-systeme
+          path: resultats/systeme/
+
+  # --- 5. Test de charge : la nuit ou à la demande (trop long pour chaque push) -------
+  charge:
+    name: Test de charge k6 (EX-13)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: compilation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: k6, 50 parties simultanées
+        run: sh ci/tests-systeme.sh resultats/charge charge
+      - name: Conserver le résumé k6
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: charge-k6
+          path: resultats/charge/
+
+  # --- 6. Reporting : publication des résultats de tous les jobs ----------------------
+  rapport:
+    name: Rapport des tests
+    needs: [compilation, tests-systeme]
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      checks: write                   # crée le « check » de résultats de tests
+      pull-requests: write            # commente la pull request
+    steps:
+      - uses: actions/checkout@v7
+      - name: Récupérer les résultats
+        uses: actions/download-artifact@v8
+        with:
+          path: resultats/
+          pattern: tests-*
+      - name: Publier les résultats JUnit
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: resultats/**/*.xml
+          check_name: Résultats des tests
+      - name: Publier dans Squash TM (si configuré)
+        env:
+          SQUASH_TM_URL: ${{ vars.SQUASH_TM_URL }}
+          SQUASH_TM_ITERATION_ID: ${{ vars.SQUASH_TM_ITERATION_ID }}
+          SQUASH_TM_API_TOKEN: ${{ secrets.SQUASH_TM_API_TOKEN }}
+        run: python3 ci/publier_squash.py "resultats/**/*.xml" --grouper "/" --sortie resultats/squash-resultats.json

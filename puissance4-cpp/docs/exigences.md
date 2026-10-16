@@ -1,5 +1,5 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:06:04 -->
-# Cahier d'exigences — Puissance 4 (itérations 1 à 5)
+<!-- Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:11:38 -->
+# Cahier d'exigences — Puissance 4 (itérations 1 à 6)
 
 Source : `generation/referentiel_it2.py` (même contenu que l'import Squash TM).
 
@@ -26,6 +26,8 @@ Source : `generation/referentiel_it2.py` (même contenu que l'import Squash TM).
 | EX-19 | Coups simultanés | Des coups envoyés simultanément sur une même partie sont traités l'un après l'autre : chaque coup accepté (200) est enregistré. | majeure | 4 |
 | EX-20 | Client bureau | Un client Qt (Windows, Linux) permet de créer une partie et de jouer, avec les mêmes règles et messages que l'IHM web. | majeure | 4 |
 | EX-21 | Traçabilité du binaire | Le point de santé `GET /api/sante` indique la version du produit, le commit Git et le numéro de build de l'intégration continue qui a produit l'exécutable ; l'IHM les affiche en pied de page. Un binaire compilé hors CI indique « local » et le build 0. | mineure | 5 |
+
+**Itération 6** : pas de nouvelle exigence ; EX-01 à EX-17 sont décrites en scénarios Gherkin exécutables (`bdd/features`, tags `@EX-xx`).
 
 **Itération 5** : EX-21 (traçabilité du binaire) — la CI grave le commit et le numéro de build.
 

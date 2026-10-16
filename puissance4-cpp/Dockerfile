@@ -1,9 +1,9 @@
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:53:26
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:09:08
 # ---------------------------------------------------------------------------
 # Compilation et tests Linux du projet Puissance 4, depuis Windows + Docker Desktop ou depuis la CI
 #
-#   docker build -t puissance4:iteration5 .            # compile + teste + image d'exécution
-#   docker run --rm -p 8080:8080 puissance4:iteration5 # lance le serveur
+#   docker build -t puissance4:iteration6 .            # compile + teste + image d'exécution
+#   docker run --rm -p 8080:8080 puissance4:iteration6 # lance le serveur
 #   docker build --target outils -t p4-outils .        # image de la chaîne de compilation
 #   docker build --target rapports --output type=local,dest=rapports .
 #                                                      # couverture gcov + cppcheck + clang-tidy -> ./rapports
@@ -34,6 +34,8 @@ COPY tests/CMakeLists.txt tests/
 COPY tests/unitaires tests/unitaires
 COPY tests/integration tests/integration
 COPY tests/systeme/ApiSystemeTest.cpp tests/systeme/
+COPY tiers tiers
+COPY bdd bdd
 RUN cmake --preset linux-gcc && cmake --build --preset linux-gcc
 
 # --- Étape 2 bis : tests pour la CI -------------------------------------------------
@@ -68,6 +70,8 @@ COPY tests/CMakeLists.txt tests/
 COPY tests/unitaires tests/unitaires
 COPY tests/integration tests/integration
 COPY tests/systeme/ApiSystemeTest.cpp tests/systeme/
+COPY tiers tiers
+COPY bdd bdd
 # Compilation instrumentée (--coverage) puis exécution des tests : produit les .gcda.
 # Un test en échec n'empêche pas de mesurer la couverture (c'est l'étape « tests » qui le signale).
 RUN cmake --preset linux-gcc-couverture && cmake --build --preset linux-gcc-couverture \
@@ -133,6 +137,14 @@ COPY tests/systeme/playwright.config.ts ./
 COPY tests/systeme/ihm ihm
 ENV CI=1
 CMD ["npx", "playwright", "test"]
+
+# Robot Framework (keyword-driven testing) : rapports log.html, report.html, output.xml, xunit
+FROM python:3.12-slim AS tests-robot
+RUN pip install --no-cache-dir --root-user-action=ignore robotframework==7.5 robotframework-requests==0.9.7
+WORKDIR /tests
+RUN mkdir /resultats
+COPY tests/systeme/robot robot
+CMD ["sh", "-c", "robot --outputdir /resultats --xunit robot-xunit.xml --variable P4_URL:$P4_URL robot"]
 
 FROM grafana/k6:2.3.0 AS charge
 USER root

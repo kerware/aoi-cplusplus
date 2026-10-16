@@ -12,6 +12,7 @@ Le projet grandit d'une itération par chapitre de la formation. Chaque itérati
 | `iteration-3` | 3. Tests unitaires | fin de partie (victoire) en TDD ; GoogleMock ; couverture gcov / gcovr ; cppcheck, clang-tidy |
 | `iteration-4` | 4. Tests système | client Qt ; tests d'API (GoogleTest, Bruno), d'IHM (Playwright, Selenium, QtTest), de charge (k6, Gatling) ; Docker Compose |
 | `iteration-5` | 5. Intégration continue | traçabilité du binaire (EX-21) ; pipelines Jenkins et GitHub Actions de départ ; tests système en CI ; publication des résultats dans Squash TM |
+| `iteration-6` | 6. Conclusion | scénarios Gherkin exécutables (gherkin-cpp) ; keyword testing avec Robot Framework ; pipelines complets |
 
 ```bash
 git clone https://github.com/kerware/aoi-cplusplus.git

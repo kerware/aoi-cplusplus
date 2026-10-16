@@ -1,12 +1,12 @@
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 19:38:45
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:04:24
 # ---------------------------------------------------------------------------
 # Puissance 4 — Projet fil rouge de la formation AOI
-# Itération 5 : intégration continue (base : itération 4 + corrigé du TP 4)
+# Itération 6 : BDD et keyword testing (base : itération 5 + corrigé du TP 5)
 # Compilation multi-plateforme : Windows 11 (MSVC) et Linux (GCC, via Docker)
 # ---------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.25)
 project(puissance4
-        VERSION 1.4.0
+        VERSION 1.5.0
         DESCRIPTION "Serveur Puissance 4 REST en C++ - architecture hexagonale"
         LANGUAGES CXX)
 
@@ -74,4 +74,12 @@ if(P4_TESTS)
 
     enable_testing()
     add_subdirectory(tests)
+
+    # Itération 6 : scénarios Gherkin (bdd/features) exécutés par gherkin-cpp, au niveau des
+    # ports d'entrée de l'hexagone (ServicePartie), sans réseau. Un test CTest par scénario (label bdd).
+    add_subdirectory(tiers/gherkin-cpp)
+    gherkin_ajouter_executable(puissance4_bdd
+        FEATURES "${PROJECT_SOURCE_DIR}/bdd/features"
+        ETAPES   "${PROJECT_SOURCE_DIR}/bdd/etapes"
+        LIENS    p4_adaptateurs p4_options)
 endif()

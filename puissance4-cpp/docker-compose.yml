@@ -1,4 +1,4 @@
-# Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:06:04
+# Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:09:08
 # ---------------------------------------------------------------------------
 # Environnement de test système (Linux) : le serveur et les outils de test
 # partagent le même réseau Docker (pas de NAT entre l'injecteur et le serveur).
@@ -8,16 +8,17 @@
 #   docker compose run --rm tests-api            # Bruno (API)
 #   docker compose run --rm tests-ihm            # Playwright (Chromium + Firefox)
 #   docker compose run --rm tests-qt             # QtTest : client Qt piloté contre le serveur
+#   docker compose run --rm tests-robot          # Robot Framework (rapports : tests/systeme/resultats/robot)
 #   docker compose run --rm charge               # k6 (EX-13)
 #   docker compose run --rm charge-gatling       # Gatling, même scénario (rapport : tests/systeme/charge-gatling/target/gatling)
 #   docker compose down                          # arrêt propre
 # ---------------------------------------------------------------------------
-name: puissance4-it5
+name: puissance4-it6
 
 services:
   serveur:
     build: { context: ., target: execution }
-    image: puissance4:iteration5
+    image: puissance4:iteration6
     ports: ["8080:8080"]
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
@@ -56,6 +57,13 @@ services:
     environment: { P4_URL: "http://serveur:8080" }
     command: ctest --preset linux-qt --output-junit /resultats/ctest-qt.xml
     volumes: ["./tests/systeme/resultats:/resultats"]
+    depends_on: { serveur: { condition: service_healthy } }
+
+  tests-robot:
+    build: { context: ., target: tests-robot }
+    profiles: [tests]
+    environment: { P4_URL: "http://serveur:8080" }
+    volumes: ["./tests/systeme/resultats/robot:/resultats"]
     depends_on: { serveur: { condition: service_healthy } }
 
   charge:

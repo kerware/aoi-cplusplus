@@ -1,16 +1,16 @@
-<!-- Dernière génération/modification faite par l'IA Claude le 13/10/2026 20:06:32 -->
+<!-- Dernière génération/modification faite par l'IA Claude le 13/10/2026 21:11:38 -->
 # Puissance 4 — projet fil rouge de la formation AOI
 
 Serveur de jeu Puissance 4 en **C++20**, exposé par une **API REST**, construit en
 **architecture hexagonale** (ports et adaptateurs). Il est compilé et testé sur
 **Windows 11 (MSVC)** et **Linux (GCC, via Docker)**.
 
-> **Itération 5 — intégration continue** (chapitre 5 de la formation). Base : itération 4 + corrigé du TP 4
-> (coups simultanés EX-19, match nul dans l'IHM EX-18, performance EX-13).
-> Nouveautés : **traçabilité du binaire** (EX-21 : version, commit et build dans `/api/sante` et l'IHM),
-> **pipelines** Jenkins (`Jenkinsfile`) et GitHub Actions (`.github/workflows/ci.yml`) — points de départ
-> du TP 5 —, environnement de tests système pour la CI (`docker-compose.ci.yml`, `ci/`), dépendances
-> téléchargées sous forme d'archives vérifiées (SHA-256). Le TP 5 s'exécute sur ce projet.
+> **Itération 6 — BDD et keyword testing** (chapitre 6 de la formation). Base : itération 5 + corrigé du
+> TP 5 (pipelines Jenkins et GitHub Actions complets).
+> Nouveautés : **scénarios Gherkin** (`bdd/features`, en français, un tag `@EX-xx` par exigence) exécutés par
+> **gherkin-cpp** (`tiers/gherkin-cpp`) au niveau des ports d'entrée, avec leur code glue (`bdd/etapes`) ;
+> **Robot Framework** (`tests/systeme/robot`) : tests d'API par mots-clés, piloté par les données et en style
+> BDD. Le TP 6 s'exécute sur ce projet.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ téléchargées automatiquement par `FetchContent` à la première configuration
 ### Windows 11 (MSVC)
 
 ```powershell
-cmake --workflow --preset windows-msvc          # configure + compile + 96 tests (+ 6 tests système ignorés sans serveur)
+cmake --workflow --preset windows-msvc          # configure + compile + 114 tests dont 18 scénarios BDD (+ 6 tests système ignorés sans serveur)
 # ou étape par étape :
 cmake --preset windows-msvc
 cmake --build --preset windows-msvc
@@ -60,8 +60,8 @@ ctest --preset windows-msvc-unitaires            # uniquement le label "unitaire
 ### Linux (via Docker)
 
 ```powershell
-docker build -t puissance4:iteration5 .          # compile + teste sous GCC ; échoue si un test échoue
-docker run --rm -it -p 8080:8080 puissance4:iteration5
+docker build -t puissance4:iteration6 .          # compile + teste sous GCC ; échoue si un test échoue
+docker run --rm -it -p 8080:8080 puissance4:iteration6
 ```
 
 Shell interactif dans la chaîne de compilation Linux (sources montées) :
@@ -113,6 +113,30 @@ Rapports : `tests/systeme/resultats/` (JUnit, rapport HTML Playwright, résumé 
 > Les mesures de charge se font sur un serveur **Release**, avec l'injecteur dans le même réseau que le
 > serveur (Docker Compose). Depuis Windows vers un conteneur, le réseau NAT de Docker Desktop fausse la mesure.
 
+## Scénarios BDD (Gherkin) — gherkin-cpp
+
+Les exigences sont décrites en Gherkin français dans `bdd/features` (`creer_partie`, `jouer_un_coup`,
+`fin_de_partie` : 18 scénarios). gherkin-cpp les exécute comme des tests GoogleTest (label CTest `bdd`) ; les
+étapes appellent le port d'entrée `ServicePartie` avec les adaptateurs en mémoire (`bdd/etapes/etapes_partie.cpp`).
+
+```powershell
+ctest --preset windows-msvc -L bdd                                    # les 18 scénarios
+.\build\windows-msvc\Debug\puissance4_bdd.exe --tags "@EX-08 or @EX-09"     # par exigence
+cmake --build --preset windows-msvc --target puissance4_bdd_extraits    # code glue des étapes non définies
+cmake --build --preset windows-msvc --target puissance4_bdd_glue        # squelette (si etapes_generees.cpp absent)
+```
+
+## Keyword testing — Robot Framework
+
+`tests/systeme/robot` : `ressources/puissance4.resource` (mots-clés métier et techniques), `puissance4_api.robot`
+(mots-clés, test piloté par les données) et `puissance4_bdd.robot` (style BDD, en français). Le serveur est
+désigné par la variable `P4_URL`.
+
+| Plate-forme | Commande |
+|---|---|
+| Linux (Docker Compose) | `docker compose run --rm tests-robot` (rapports dans `tests/systeme/resultats/robot`) |
+| Windows | `pip install robotframework==7.5 robotframework-requests==0.9.7` puis `robot --variable P4_URL:http://127.0.0.1:8080 --outputdir resultats tests\systeme\robot` |
+
 ## Intégration continue
 
 Les pipelines n'appellent que des commandes Docker et les scripts de `ci/` : ils sont identiques sur
@@ -120,12 +144,12 @@ Jenkins, GitHub Actions et le poste du développeur.
 
 | Élément | Rôle |
 |---|---|
-| `Jenkinsfile` | Pipeline Jenkins déclaratif (point de départ du TP 5 : compilation + tests Linux) |
-| `.github/workflows/ci.yml` | Workflow GitHub Actions (point de départ du TP 5 : job Linux) |
+| `Jenkinsfile` | Pipeline Jenkins déclaratif complet (corrigé du TP 5) + rapport Robot Framework |
+| `.github/workflows/ci.yml` | Workflow GitHub Actions complet (corrigé du TP 5) |
 | `Dockerfile`, étape `resultats-tests` | Compile, exécute les tests et exporte le rapport JUnit **même si des tests échouent** |
 | `Dockerfile`, étape `rapports` | Couverture (Cobertura, HTML, résumé JSON) et analyse statique (cppcheck XML, clang-tidy) |
 | `docker-compose.ci.yml` | Serveur + injecteurs de tests système sous forme d'images (aucun dossier monté, aucun port publié) |
-| `ci/tests-systeme.sh` | Déploie, lance les injecteurs, rapatrie les résultats, nettoie toujours |
+| `ci/tests-systeme.sh` | Déploie, lance les injecteurs (GoogleTest, Bruno, Playwright, Robot Framework), rapatrie les résultats, nettoie toujours |
 | `ci/seuil_qualite.py` | Seuil de qualité : couverture des lignes ≥ 90 %, aucune remarque d'analyse statique |
 | `ci/publier_squash.py` | Publie les résultats JUnit dans une itération Squash TM (API REST d'import) |
 
@@ -143,7 +167,7 @@ Identification du build (EX-21) : la CI exporte `P4_COMMIT` et `P4_BUILD` avant 
 
 Un Jenkins prêt à l'emploi pour la formation est fourni dans `outils/jenkins` (dépôt de la formation).
 
-## API REST (itération 5)
+## API REST (itération 6)
 
 | Méthode | Chemin               | Corps                                   | Réponses |
 |---------|----------------------|-----------------------------------------|----------|
@@ -156,7 +180,7 @@ Un Jenkins prêt à l'emploi pour la formation est fourni dans `outils/jenkins` 
 curl.exe -s -X POST http://localhost:8080/api/parties -H "Content-Type: application/json" -d '{\"joueur1\":\"Alice\",\"joueur2\":\"Bob\"}'
 ```
 
-## Les tests de l'itération 5
+## Les tests de l'itération 6
 
 | Niveau        | Exécutable          | Nombre | Outils |
 |---------------|---------------------|--------|--------|
@@ -164,6 +188,8 @@ curl.exe -s -X POST http://localhost:8080/api/parties -H "Content-Type: applicat
 | Intégration   | `tests_integration` | 29     | GoogleTest + client HTTP cpp-httplib sur un port libre |
 | Système API   | `tests_systeme`     | 6      | GoogleTest + client HTTP contre le serveur déployé (`P4_URL`) |
 | Système API   | collection Bruno    | 6 + 7 cas CSV | Bruno CLI 4.2 |
+| BDD           | `puissance4_bdd` (gherkin-cpp) | 18 scénarios | Gherkin français, ports d'entrée |
+| Système API   | Robot Framework     | 7      | Robot Framework 7.5 + RequestsLibrary |
 | Système IHM   | Playwright          | 7 (× 2 navigateurs sous Linux) | Playwright 1.64 |
 | Système IHM   | Selenium            | 2      | Selenium 4.41 + pytest (comparaison) |
 | IHM bureau    | `tst_partievue`, `tst_fenetre` | 2 exécutables QtTest | QtTest (Qt 6.11 Windows, 6.4 Linux) |
@@ -178,3 +204,4 @@ curl.exe -s -X POST http://localhost:8080/api/parties -H "Content-Type: applicat
 | 3. Tests unitaires                | 3         | Victoire / match nul, TDD, GMock, gcov, cppcheck |
 | 4. Tests système                  | 4         | Playwright, Bruno, k6, client Qt + QtTest |
 | 5. Intégration continue           | 5         | Jenkins, GitHub Actions, rapports, Squash TM |
+| 6. Conclusion                     | 6         | BDD (Gherkin, gherkin-cpp), keyword testing (Robot Framework) |
